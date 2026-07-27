@@ -1,4 +1,5 @@
 #pragma once
+#include "rttr/rttr_enable.h"
 
 // -----------------------------------------------
 // wh::framework::I_UIHudCrimeList -- KCD2 WHGame.dll 1.5.6 (kd7u).  Pure interface, 6 slots.
@@ -15,11 +16,6 @@
 //   [3..5] RTTR_ENABLE() trio thunks (0x18213A62C/0x18213A5FC/0x18213A578)
 // Method names coined from the flash call names; a2 element type UNVERIFIED.
 
-namespace rttr {
-class type;
-namespace detail { struct derived_info; }
-}  // namespace rttr
-
 namespace wh::framework {
 
 class I_UIHudCrimeList {
@@ -28,10 +24,7 @@ public:
     virtual ~I_UIHudCrimeList();                                 // [0]
     virtual void ShowCrimeList(const void* pCrimeData) = 0;      // [1] 0x182B8EB30 flash "CrimeListData"+"ShowCrimeList"
     virtual void HideCrimeList() = 0;                            // [2] 0x182B8DA68 flash "HideCrimeList"
-    // RTTR_ENABLE() trio.
-    virtual rttr::type get_type() const;                         // [3]
-    virtual void* get_ptr();                                     // [4]
-    virtual rttr::detail::derived_info get_derived_info();       // [5]
+    RTTR_ENABLE()  // [3..5] thunks -0x58; baseless (creator 0x181898370); in C_UIHudCrimeList's RTTR_ENABLE(C_UIBase, I_UIHudCrimeList)
 };
 static_assert(sizeof(I_UIHudCrimeList) == 8);
 

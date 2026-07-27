@@ -22,8 +22,9 @@ public:
     bool  Apply(int param, void* ctx) override;          // [2]  sub_1808AC89C (shared body)
     void  ApplySecondary(int param, void* ctx) override; // [3]  nullsub_1
     void* BuildStringA(void* out) override;              // [4]  sub_180EE5BF4
-    void* BuildStringB(void* out) override;              // [10] sub_181A6CEC8
-    void* GetIdLabel(void* out) override;                // [12] sub_1834346AC
+    // trio overrides [10]/[12] ([11] get_ptr inherited); RTTR_ENABLE(<base>) deferred -- base lambda 0x18178203C undecoded
+    rttr::type get_type() const override;                    // [10] sub_181A6CEC8
+    rttr::detail::derived_info get_derived_info() override;  // [12] sub_1834346AC
     const char* GetFormatString() override;              // [13] sub_181779750 (metarole format string)
 };
 static_assert(sizeof(C_MonologByMetaroleEventImplementation) == 0x08, "vptr only (alloc 8)");

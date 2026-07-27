@@ -14,8 +14,9 @@
 // Abstract equipment-slot panel. Own slot addrs in the subclass vtable: [10] 0x180C41F40,
 // [11] 0x180C4A540, [12] 0x181F4B660, [13] 0x1805682AC -- base-vs-derived split
 // UNVERIFIED (no base COL to diff), so all four are declared pure here and implemented
-// by the subclass. Members +0x18..+0x40 written on the sub_18146D050 construction path;
-// which ctor (base vs derived) writes them is UNVERIFIED.
+// by the subclass. Members +0x18..+0x40 written on the sub_18146D050 construction path
+// (+0x18 is the inherited I_UIDragAndDropTarget::m_dragCtx08, not an own member --
+// verify pass); which ctor (base vs derived) writes them is UNVERIFIED.
 
 namespace wh::guimodule {
 
@@ -30,7 +31,8 @@ public:
     virtual void _vf12() = 0;   // [12] role UNVERIFIED
     virtual void _vf13() = 0;   // [13] role UNVERIFIED
 
-    void*                     m_unk18;     // +0x18  active drag payload/context ptr (non-owning): set from arg in DnD-target vf[1] sub_1811A234C, cleared in vf[2] sub_1811A2A40
+    // (+0x18 = inherited I_UIDragAndDropTarget::m_dragCtx08 -- set from arg in DnD vf[1]
+    // sub_1811A234C, cleared in vf[2] sub_1811A2A40)
     C_UIApseCharacterContent* m_pContent;  // +0x20  -> owner's content pane (owner+0x1C8)
     C_UICharacterBase*        m_pOwner;    // +0x28  owning character panel
     void*                     m_unk30;     // +0x30  non-owning context ptr: read as m_unk30+0x668 w/ vtable calls in DnD-target vf[1] sub_1811A234C; identity-compared in vf[12] sub_181F4B660 (sets m_flag38), reset in vf[11] sub_180C4A540

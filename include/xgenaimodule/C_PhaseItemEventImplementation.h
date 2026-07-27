@@ -19,8 +19,9 @@ public:
     void* GetName() override;                            // [1]  sub_180EE58DC
     bool  Apply(int param, void* ctx) override;          // [2]  sub_18150587C
     void  ApplySecondary(int param, void* ctx) override; // [3]  nullsub_1
-    void* BuildStringB(void* out) override;              // [10] sub_181A6CE3C
-    void* GetIdLabel(void* out) override;                // [12] sub_1834346CC
+    // trio overrides [10]/[12] ([11] get_ptr inherited); RTTR_ENABLE(<base>) deferred -- base lambda 0x180EE5510 undecoded
+    rttr::type get_type() const override;                    // [10] sub_181A6CE3C
+    rttr::detail::derived_info get_derived_info() override;  // [12] sub_1834346CC
 };
 static_assert(sizeof(C_PhaseItemEventImplementation) == 0x08, "vptr only (alloc 8)");
 

@@ -13,6 +13,10 @@
 // Holds the item QUALITY (+0xA0, default = owner->vf6()) and CONDITION fraction (+0xA4, clamp
 // [0,1], default 1.0 -- the classic KCD durability signature). The initial-health path
 // sub_180469348(owner, clamp[0,1]) also writes the authoritative condition to C_Item+0x64.
+// RTTR SetItemHealth 0x1808D61B8 writes +0xA4 (equippable branch); the Condition getter
+// 0x18096F7D4 reads it via 0x180465C6C. The extended vtable (0x183EC1870) adds a WASH virtual
+// @+0xC8 past the 24-slot I_ItemRuntimeData base -- C_Item::WashItem (0x182A6B758) routes there
+// for Equippable-type items (per-item dirt state lives in the subclasses; fields unmapped).
 
 namespace wh::entitymodule {
 

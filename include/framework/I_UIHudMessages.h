@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include "rttr/rttr_enable.h"
 
 // -----------------------------------------------
 // wh::framework::I_UIHudMessages -- KCD2 WHGame.dll 1.5.6 (kd7u).  Pure interface, 7 slots.
@@ -18,11 +19,6 @@
 //       from ctx+0x50 via sub_180B40F98(,2); else magic-static default)
 // Method names coined from behavior/flash names.
 
-namespace rttr {
-class type;
-namespace detail { struct derived_info; }
-}  // namespace rttr
-
 namespace wh::framework {
 
 class I_UIHudMessages {
@@ -32,10 +28,7 @@ public:
     virtual void HideInfoText() = 0;                                               // [1] 0x180C44E70 flash "HideInfoText"
     virtual CryStringT<char>* GetMessageText(uint8_t messageId) = 0;               // [2] 0x181A8E8E0 -> &m_messageTexts[messageId]
     virtual CryStringT<char>* GetMessageSound(uint16_t typeFlags) = 0;             // [3] 0x182B8D9AC (name coined, semantics partial)
-    // RTTR_ENABLE() trio.
-    virtual rttr::type get_type() const;                                           // [4]
-    virtual void* get_ptr();                                                       // [5]
-    virtual rttr::detail::derived_info get_derived_info();                         // [6]
+    RTTR_ENABLE()  // [4..6] thunks -0x58; baseless (creator 0x18185C950); in C_UIHudMessages's RTTR_ENABLE(C_UIBase, I_UIHudMessages)
 };
 static_assert(sizeof(I_UIHudMessages) == 8);
 

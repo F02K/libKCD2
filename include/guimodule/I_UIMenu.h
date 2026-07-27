@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include "rttr/rttr_enable.h"
 
 // -----------------------------------------------
 // wh::I_UIMenu -- KCD2 WHGame.dll 1.5.6 (kd7u).  Pure interface (vtable only).
@@ -40,9 +41,12 @@ public:
     virtual void DisconnectSignalB(const S_UIDelegate&) = 0;  // [13] 0x1806150F8
     virtual void ConnectSignalC(const S_UIDelegate&) = 0;     // [14] 0x182BA6C08  signal @+0x90 (helper pair sub_1804CD938/sub_1804CD6C8)
     virtual void DisconnectSignalC(const S_UIDelegate&) = 0;  // [15] 0x182BA6DF0
-    virtual void _vf16() = 0;                             // [16] thunk sub_18213A7D0 (UNVERIFIED)
-    virtual void _vf17() = 0;                             // [17] thunk sub_18213A5FC (UNVERIFIED)
-    virtual void _vf18() = 0;                             // [18] thunk sub_18213A7B8 (UNVERIFIED)
+    // RTTR trio [16..18] -- RESOLVED (was _vf16.._vf18 UNVERIFIED): the slot thunks are
+    // C_UIMenu's overriding trio adjusted -0x58 (get_type 0x18213A7D0 -> 0x180ED549C,
+    // get_ptr 0x18213A5FC -> 0x1805F5DA0, get_derived_info 0x18213A7B8 -> 0x1819A2894).
+    // I_UIMenu is itself registered BASELESS ("wh::I_UIMenu", sizeof imm 8, creator
+    // 0x181880E5C) and is listed in C_UIMenu's macro: RTTR_ENABLE(C_UIBase, wh::I_UIMenu).
+    RTTR_ENABLE()
 };
 static_assert(sizeof(I_UIMenu) == 8);
 

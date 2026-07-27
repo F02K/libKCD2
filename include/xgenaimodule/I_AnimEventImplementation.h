@@ -1,4 +1,5 @@
 #pragma once
+#include "rttr/rttr_enable.h"
 
 // -----------------------------------------------
 // wh::xgenaimodule::I_AnimEventImplementation -- shared root of the 14 anim-event
@@ -28,9 +29,7 @@ public:
     virtual void  SerializeHook7();                          // [7]  nullsub_1 default [U signature]
     virtual void  SerializeHook8();                          // [8]  nullsub_1 default [U signature]
     virtual void* GetDefaultWuid(void* out);                 // [9]  sub_181AAB750 -- *out = qword_18533AD68 (WUID, 8B) [U]
-    virtual void* BuildStringB(void* out);                   // [10] sub_183434AC4 (via sub_18171CA4C) [U]
-    virtual I_AnimEventImplementation* Noop();               // [11] sub_1805F5DA0 -- return this (never overridden)
-    virtual void* GetIdLabel(void* out);                     // [12] sub_1834347AC -- (id,label) pair out [U]
+    RTTR_ENABLE()  // [10..12]: get_type 0x183434AC4 (ex-"BuildStringB"), get_derived 0x1834347AC (ex-"GetIdLabel"); leaves override [10]/[12]
 };
 static_assert(sizeof(I_AnimEventImplementation) == 0x08, "interface: vtable pointer only");
 

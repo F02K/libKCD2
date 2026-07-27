@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <functional>
+#include "rttr/rttr_enable.h"
 #include "guimodule/E_ButtonId.h"
 #include "framework/C_LocalizedString.h"
 
@@ -21,20 +22,12 @@
 // OnButton dispatch sub_180C07A98 maps the name back to the id (sub_180C07AE4) and invokes
 // m_onClick -- so the row doubles as the button's click-handler registry.
 
-namespace rttr {
-class type;
-namespace detail { struct derived_info; }
-}  // namespace rttr
-
 namespace wh::guimodule {
 
 class C_UIMenuButton {
 public:
     inline static constexpr auto RTTI = Offsets::RTTI_C_UIMenuButton;
-    // RTTR_ENABLE() trio -- the WHOLE vtable ([0..2]); no virtual dtor.
-    virtual rttr::type get_type() const;                     // [0] sub_181A6CB10
-    virtual void* get_ptr();                                 // [1] 0x1805F5DA0
-    virtual rttr::detail::derived_info get_derived_info();   // [2]
+    RTTR_ENABLE()  // [0..2] whole vtable, no dtor: get_type 0x181A6CB10, get_derived 0x182B3E690
 
     E_ButtonId::Type m_buttonId;                  // +0x08  identity key (DefaultKeyExtractor)
     uint8_t _pad09[7];                            // +0x09

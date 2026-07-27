@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include "rttr/rttr_enable.h"
 
 // -----------------------------------------------
 // wh::guimodule::S_CutsceneEventDesc -- KCD2 WHGame.dll 1.5.6 (kd7u).  sizeof 0x30.
@@ -9,20 +10,14 @@
 // cutscene-event descriptor; embedded BY VALUE in C_CutsceneEvent @+0x08. Layout from
 // the copy ctor sub_182B35244. Member roles UNVERIFIED (names descriptive).
 
-namespace rttr {
-class type;
-namespace detail { struct derived_info; }
-}  // namespace rttr
-
 namespace wh::guimodule {
 
 class S_CutsceneEventDesc {
 public:
     inline static constexpr auto RTTI = Offsets::RTTI_S_CutsceneEventDesc;
-    // RTTR_ENABLE() trio -- the WHOLE vtable ([0..2]); no virtual dtor.
-    virtual rttr::type get_type() const;                     // [0] 0x182B3EC40
-    virtual void* get_ptr();                                 // [1] 0x1805F5DA0
-    virtual rttr::detail::derived_info get_derived_info();   // [2] 0x182B3E730
+    // RTTR trio [0..2] -- the WHOLE vtable, no virtual dtor: get_type 0x182B3EC40,
+    // get_ptr 0x1805F5DA0, get_derived_info 0x182B3E730. Registered BASELESS.
+    RTTR_ENABLE()
 
     int32_t          m_int08;    // +0x08
     int32_t          m_int0C;    // +0x0C

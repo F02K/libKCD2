@@ -2,6 +2,7 @@
 #include <cstdint>
 #include "S_DealDamageParams.h"
 #include "../framework/C_Signal.h"
+#include "rttr/rttr_enable.h"
 
 // -----------------------------------------------
 // wh::rpgmodule::C_CombatSoul -- KCD2 WHGame.dll 1.5.6 (kd7u).  sizeof 0xA8.
@@ -23,6 +24,7 @@ namespace wh::rpgmodule {
 
 class C_Soul;
 class C_CombatSoulModel;   // RTTI .?AVC_CombatSoulModel@rpgmodule@wh@@ (160B, factory sub_1803F2814)
+class I_CombatSoul;        // rttr base of C_CombatSoul (fwd-decl only -- no RE header yet)
 
 class C_CombatSoul {
 public:
@@ -84,9 +86,7 @@ public:
     virtual void  Unk46();                        // [46] 0x180686FDC
     virtual void  Unk47();                        // [47] 0x1806875BC
     virtual void  Unk48();                        // [48] 0x180728C30
-    virtual void  Unk49();                        // [49] 0x182D2BFC0
-    virtual void  Unk50();                        // [50] 0x1805F5DA0  4B trivial stub
-    virtual void  Unk51();                        // [51] 0x182D2BF28
+    RTTR_ENABLE(I_CombatSoul)  // [49..51]: get_type 0x182D2BFC0, get_derived 0x182D2BF28; base lambda 0x1818A7CDC
 
     wh::shared::C_Signal<> m_signal08;    // +0x08  purpose unresolved
     wh::shared::C_Signal<> m_signal18;    // +0x18

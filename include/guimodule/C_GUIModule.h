@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "rttr/rttr_enable.h"
 #include "framework/C_BaseModule.h"
 #include "Offsets/vtables/ISystem.h"            // Offsets::ISystemEventListener
 #include "Offsets/vtables/IServiceListener.h"   // Cry::GamePlatform::IServiceListener replica
@@ -87,10 +88,7 @@ public:
     void Update() override;                        // [4] 0x180533814  elem->vf[4], UIPlayer tick sub_1805A0ABC, buffs->vf[4]
     int GetModuleId() const override;              // [5] 0x181A72890  = 16
     const char* GetModuleName() const override;    // [6] 0x181A71AA0  = "GUIModule"
-    // RTTR_ENABLE() expansion:
-    virtual rttr::type get_type() const;                      // [7] 0x182B92720
-    virtual void* get_ptr();                                  // [8] 0x1805F5DA0
-    virtual rttr::detail::derived_info get_derived_info();    // [9] 0x182B92398
+    RTTR_ENABLE()  // [7..9]: get_type 0x182B92720, get_derived 0x182B92398; baseless (C_BaseModule chain not rttr-visible)
 
     // rttr-visible computed property "UIElementsByName" (getter sub_182B8D8D8) --
     // builds the name map on demand; see banner. Impl in src/guimodule/C_GUIModule.cpp.

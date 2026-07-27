@@ -70,8 +70,8 @@ public:
     void InventorySoulUnk37() override;                                    // [37] sub_18087AAB8 [U signature]
     void InventorySoulUnk38() override;                                    // [38] sub_18068C0C4 [U signature]
     void InventorySoulUnk39() override;                                    // [39] sub_181FE1810 [U signature]
-    void InventorySoulUnk40() override;                                    // [40] sub_1808EEE6C [U signature]
-    void InventorySoulUnk41() override;                                    // [41] sub_1808C7430 [U signature]
+    void EquipItem(entitymodule::C_Item* item, bool a2) override;          // [40] sub_1808EEE6C
+    void UnequipItem(entitymodule::C_Item* item, bool a2) override;        // [41] sub_1808C7430
     void InventorySoulUnk42() override;                                    // [42] sub_1811A2E60 [U signature]
     void* InventorySoulUnk43() override;                                   // [43] sub_18087E308
     void* InventorySoulUnk44() override;                                   // [44] sub_18087E2F4

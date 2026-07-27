@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include "rttr/rttr_enable.h"
 
 // -----------------------------------------------
 // wh::guimodule::C_UIBase -- KCD2 WHGame.dll 1.5.6 (kd7u).  sizeof 0x10.
@@ -41,12 +42,7 @@
 //          get_ptr (sub_1805F5DA0, `return this`), get_derived_info (sub_182B038BC,
 //          returns {this, get_type()}). get_type is what C_GUIModule keys its
 //          name->element map on (UIElementsByName getter sub_182B8D8D8 reads
-//          type_data+0x18 string_view).
-
-namespace rttr {
-class type;
-namespace detail { struct derived_info; }
-}  // namespace rttr
+//          type_data+0x18 std::string name).
 
 namespace wh::guimodule {
 
@@ -62,10 +58,7 @@ public:
     virtual void Update();                                      // [4] nullsub_1
     virtual void OnGameStart(void* pGame);                      // [5] nullsub_1  broadcast on module msg 40 (sub_180EC8400); name coined
     virtual void OnGameEnd(void* pGame);                        // [6] nullsub_1  broadcast on module msg 41 (sub_180EC7B34); name coined
-    // RTTR_ENABLE() expansion -- rttr reflection virtuals.
-    virtual rttr::type get_type() const;                        // [7] 0x182B039B0
-    virtual void* get_ptr();                                    // [8] 0x1805F5DA0
-    virtual rttr::detail::derived_info get_derived_info();      // [9] 0x182B038BC
+    RTTR_ENABLE()  // [7..9]: get_type 0x182B039B0, get_derived 0x182B038BC; the root base GUI screens list in their macros
 
     C_GUIModule* m_pModule;   // +0x08  owning module, set by Init (null until module message 0)
 };

@@ -23,8 +23,9 @@ public:
     void  SerializeHook6() override;                     // [6]  sub_1808FA618
     void  SerializeHook7() override;                     // [7]  sub_181087D98
     void  SerializeHook8() override;                     // [8]  nullsub_1
-    void* BuildStringB(void* out) override;              // [10] sub_181A6D29C
-    void* GetIdLabel(void* out) override;                // [12] sub_18343464C
+    // trio overrides [10]/[12] ([11] get_ptr inherited); RTTR_ENABLE(<base>) deferred -- base lambda 0x180D1E8B4 undecoded
+    rttr::type get_type() const override;                    // [10] sub_181A6D29C
+    rttr::detail::derived_info get_derived_info() override;  // [12] sub_18343464C
 };
 static_assert(sizeof(C_DespawnItemEventImplementation) == 0x08, "vptr only (alloc 8)");
 

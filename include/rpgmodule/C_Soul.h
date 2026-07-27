@@ -95,7 +95,9 @@ public:
     bool     m_modifierListsDirty;             // +0xE8  set by the unsorted cat7 commit
     uint8_t  _padE9[7];                        // +0xE9
     C_CombatSoul    m_combatSoul;              // +0x0F0  (0xA8; 7 signals + 2 smart-ptrs)
-    C_InventorySoul m_inventorySoul;           // +0x198  (0x148; MI, 3 vtables)
+    C_InventorySoul m_inventorySoul;           // +0x198  (0x148; MI, 3 vtables). Soul primary vf +0x1E0
+                                               //         (slot 60) returns &m_inventorySoul -- the equip/
+                                               //         unequip route (0x1808ED9E4 / 0x1808C73D0)
     C_DogSoulComponent* m_pDogComponent;       // +0x2E0  owned; alloc'd when archetype-desc(+0xCB8)[+0x18]==6 via sub_180964FDC; dtor sub_180964110 stores C_DogSoulComponent vtable
     void*    m_pOwned2E8;                      // +0x2E8  owned ptr, POD pointee (dtor sub_1809662EC just frees via sub_181AB5160); pointee class unresolved
     C_SkillTeacherSoulComponent* m_pSkillTeacher; // +0x2F0  owned 0xF0 obj; ctor sub_180A1A4A8 stores C_SkillTeacherSoulComponent vtable; dtor sub_1809662FC deletes via vslot+0x10

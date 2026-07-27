@@ -12,7 +12,9 @@
 // GLOBAL Lua table "ItemManager" (SetGlobalName sub_180B85140 -> SetGlobalValue;
 // m_bInstanceMethods=0, PROVEN). Handlers are DIRECT member-fn delegates.
 //
-// Lua fn table `ItemManager` (7 fns; registrar sub_1812B2D38):
+// Lua fn table `ItemManager` (7 fns; registrar sub_1812B2D38 = REL::ID(104708) --
+// single arg = this; Projects/LuaUtils hooks it to append its extension fns into
+// m_pMethodsTable after the vanilla registration):
 //   RemoveItem       0x182AC0E54  (itemId)
 //   GetItem          0x182ABC0BC  (itemId)
 //   GetItemUIName    0x182ABC354  (classId)

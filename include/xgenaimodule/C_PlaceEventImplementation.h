@@ -29,8 +29,9 @@ public:
     void  SerializeHook7() override;                     // [7]  sub_1810869F4
     void  SerializeHook8() override;                     // [8]  nullsub_1
     void* GetDefaultWuid(void* out) override;            // [9]  sub_18343149C
-    void* BuildStringB(void* out) override;              // [10] sub_181A6CE04
-    void* GetIdLabel(void* out) override;                // [12] sub_18343470C
+    // trio overrides [10]/[12] ([11] get_ptr inherited); RTTR_ENABLE(<base>) deferred -- base lambda 0x180D1E8B4 undecoded
+    rttr::type get_type() const override;                    // [10] sub_181A6CE04
+    rttr::detail::derived_info get_derived_info() override;  // [12] sub_18343470C
 
     uint64_t field_8;   // +0x08  ctor leaves UNinitialized; purpose UNVERIFIED [U]
 };

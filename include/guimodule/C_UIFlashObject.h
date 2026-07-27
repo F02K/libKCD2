@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include "rttr/rttr_enable.h"
 
 // -----------------------------------------------
 // wh::guimodule::C_UIFlashObject -- KCD2 WHGame.dll 1.5.6 (kd7u).  sizeof 0x18.
@@ -27,11 +28,6 @@
 //   [3..5] RTTR_ENABLE() trio (get_type 0x182B039CC / get_ptr 0x1805F5DA0 /
 //       get_derived_info 0x182B038DC)
 
-namespace rttr {
-class type;
-namespace detail { struct derived_info; }
-}  // namespace rttr
-
 namespace wh::guimodule {
 
 class C_UIFlashObject {
@@ -41,10 +37,7 @@ public:
     // Serialize this record into a flash argument pack (arg type = SUIArguments&).
     virtual void FillUIArgs(void* pArgs) const;              // [1] 0x1803C15FC
     virtual void _vf2(void* pArgs) const;                    // [2] 0x180556C4C  role UNVERIFIED
-    // RTTR_ENABLE() expansion.
-    virtual rttr::type get_type() const;                     // [3] 0x182B039CC
-    virtual void* get_ptr();                                 // [4] 0x1805F5DA0
-    virtual rttr::detail::derived_info get_derived_info();   // [5] 0x182B038DC
+    RTTR_ENABLE()  // [3..5]: get_type 0x182B039CC, get_derived 0x182B038DC
 
     CryStringT<char> m_id;      // +0x08  flash-side object id (decimal string). The KEY flash
                                 //        uses to create/update/remove the marker clip (fc_add/

@@ -4,6 +4,7 @@
 #include <vector>
 #include "../CryEngine/CryCommon/CryString.h"
 #include "../CryEngine/CryCommon/CryExtension/CryGUID.h"
+#include "rttr/rttr_enable.h"
 
 // -----------------------------------------------
 // wh::entitymodule::S_ItemClass -- the item CLASS-definition root (KCD2 WHGame.dll 1.5.6, utem).
@@ -83,9 +84,7 @@ public:
     virtual S_ItemClass* GetAsUnk48();  virtual S_ItemClass* GetAsUnk49();
     virtual S_ItemClass* GetAsUnk50();
     virtual void OnRegister();                               // [51] finalize hook: registrar calls it pre-insert; base nullsub
-    virtual int64_t unk52();                                 // [52]
-    virtual int64_t unk53();                                 // [53]
-    virtual void unk54();                                    // [54] make-handle: {this, refcount} [INFERRED]
+    RTTR_ENABLE()  // [52..54]: get_type 0x181A6DB4C, get_derived 0x182A23F6C
 
     CryGUID m_guid;                        // +0x08  THE class guid: registry key, FindItemByClass
                                            //        compare (0x1808D319D), bark/presentation id

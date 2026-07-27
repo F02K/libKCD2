@@ -1,4 +1,7 @@
 #pragma once
+#include <cstdint>
+#include <vector>
+#include "rttr/rttr_enable.h"
 
 // -----------------------------------------------
 // wh::dialogmodule::data::S_FastForwardRequest -- dialog fast-forward (SKIP) message
@@ -16,10 +19,10 @@ namespace wh::dialogmodule::data {
 struct S_FastForwardRequest {
     inline static constexpr auto RTTI = Offsets::RTTI_S_FastForwardRequest;
     virtual ~S_FastForwardRequest();   // [0]
-    virtual int GetType();             // [1] message type id [signature UNVERIFIED]
-    virtual void ClonePayload();       // [2] [signature UNVERIFIED]
-    virtual void _vf3();               // [3] [role UNVERIFIED]
-    virtual void* Clone();             // [4] [signature UNVERIFIED]
+    // [1] 0x1805B1B70 base: zero-inits the 24B sret vector (empty); overridden by ForAll
+    // (enumerate) / ForRole (push one 8B id). sret ABI PROVEN (verify); name+elem INFERRED.
+    virtual std::vector<uint64_t>* CollectTargetIds(std::vector<uint64_t>* out, void* ctx);
+    RTTR_ENABLE()  // [2..4]: get_type 0x180EC27E0, get_derived 0x18284FD5C (ex-"ClonePayload"/"Clone" guesses)
 };
 static_assert(sizeof(S_FastForwardRequest) == 0x08, "S_FastForwardRequest is vptr-only");
 

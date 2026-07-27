@@ -1,11 +1,12 @@
 #pragma once
 #include <cstdint>
+#include "rttr/rttr_enable.h"
 
 // -----------------------------------------------
 // wh::databasemodule::I_DatabaseModule -- database module interface (KCD2 WHGame.dll 1.5.6, kd7u).
 // -----------------------------------------------
 // RTTI .?AVI_DatabaseModule@databasemodule@wh@@ (TD 0x184AEF4A8)  vtable 0x183E3D240, 31 slots
-// ([0] dtor, [1]..[27] pure, [28]/[30] defaults, [29] returns this).
+// ([0] dtor, [1]..[27] pure, [28..30] RTTR_ENABLE() trio: [28]/[30] defaults, [29] returns this).
 // Implemented by C_DatabaseModule (I_DatabaseModule subobject @+0x10, impl vtable 0x183C38CC0).
 // Only the slots exercised by C_ObjectDatabaseBase::Register/Load are semantically attested:
 //   [7]  0x38  RegisterTable(name, a3, a4, int flags): news an 88-byte table descriptor
@@ -15,7 +16,7 @@
 //        (impl 0x180D18444)  [arg shape INFERRED from the Load caller]
 //   [12] 0x60  GetTableMetadata(name, int rowStride) -> the 88-byte descriptor (desc+0x38 = type
 //        dword, verified against the database's m_type)  (impl 0x18068B5A4)
-// The remaining 27 slots are undecompiled -- declared as numbered placeholders.
+// The remaining 24 slots are undecompiled -- declared as numbered placeholders.
 
 namespace wh::databasemodule {
 
@@ -50,9 +51,7 @@ public:
     virtual void _vf25() = 0;                              // [25] 0xC8
     virtual void _vf26() = 0;                              // [26] 0xD0
     virtual void _vf27() = 0;                              // [27] 0xD8
-    virtual void _vf28() {}                                // [28] 0xE0  default 0x182741398
-    virtual void* _vf29_self() { return this; }            // [29] 0xE8  returns this (0x1805F5DA0)
-    virtual void _vf30() {}                                // [30] 0xF0  default 0x18274135C
+    RTTR_ENABLE()  // [28..30]: get_type 0x182741398, get_derived 0x18274135C
 };
 static_assert(sizeof(I_DatabaseModule) == 0x08, "pure interface: vtable pointer only");
 

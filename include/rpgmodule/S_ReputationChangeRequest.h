@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <cstddef>
 #include "../CryEngine/CryCommon/CryString.h"
+#include "rttr/rttr_enable.h"
 
 // ===========================================================================
 // wh::rpgmodule::S_ReputationChangeRequest -- the reputation-change descriptor
@@ -17,17 +18,15 @@
 //   clamp        = row+0x18 when != +/-FLT_MAX
 //   then scaledChange *= playerSoul.DerivedStat(70 + (change < 0)) -- the player's reputation
 //   gain/loss multiplier derived stats (sub_180785414).
-// Copy-ctor sub_182CA8130; default sub_1807853D4. Vtable: [0]/[2] return an invalid-WUID-init
-// out-param pair (cause resolution -- overridden by C_GenericReputationChangeCause), [1] returns
-// `this` [slot semantics thin, UNVERIFIED].
+// Copy-ctor sub_182CA8130; default sub_1807853D4. The 3-slot vtable is the RTTR trio, no
+// virtual dtor (the old "invalid-WUID out-param pair" reading was the trio;
+// C_GenericReputationChangeCause "overriding" [0]/[2] is that class's own trio).
 
 namespace wh::rpgmodule {
 
 struct S_ReputationChangeRequest {
     inline static constexpr auto RTTI = Offsets::RTTI_S_ReputationChangeRequest;
-    virtual void* _vf0(void* out) { return out; }   // [0] 0x00  writes invalid id to out (0x180D67824)
-    virtual void* _vf1() { return this; }           // [1] 0x08  identity (0x1805F5DA0)
-    virtual void* _vf2(void* out) { return out; }   // [2] 0x10  {this, invalid id} pair out (0x182CB13E0)
+    RTTR_ENABLE()  // [0..2] whole vtable, no dtor: get_type 0x180D67824, get_derived 0x182CB13E0
 
     float    m_scaledChange;        // +0x08  row change * weight * player gain/loss derived stat
     uint8_t  m_targetBits;          // +0x0C  target layer bitmask (row+0x14)

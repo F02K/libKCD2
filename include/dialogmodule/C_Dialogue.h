@@ -2,13 +2,14 @@
 #include <cstdint>
 #include "C_Decision.h"
 #include "../CryEngine/CryCommon/CryString.h"
+#include "rttr/rttr_enable.h"
 
 // -----------------------------------------------
 // wh::dialogmodule::data::C_Dialogue -- dialogue definition (KCD2 1.5.6, kd7u).
 // sizeof 0xA0.
 // -----------------------------------------------
-// RTTI TD 0x184B67C68; vtable 0x183A471E0 (3 slots); ctor sub_1806B3724; deleting-dtor
-// [0] sub_1819DF228. Embeds its root C_Decision by value at +0x08 (ctor/dtor delegation
+// RTTI TD 0x184B67C68; vtable 0x183A471E0 = RTTR trio ONLY, no virtual dtor (see class
+// body); ctor sub_1806B3724. Embeds its root C_Decision by value at +0x08 (ctor/dtor delegation
 // confirmed). m_chatTimeLimit defaults from CVar wh_dlg_DefaultChatTimeLimit,
 // m_maxDistance from wh_dlg_DefaultMaxDistance. Tail fields +0x70/+0x80..+0x98 not
 // walked [roles UNVERIFIED].
@@ -18,9 +19,7 @@ namespace wh::dialogmodule::data {
 class C_Dialogue {
 public:
     inline static constexpr auto RTTI = Offsets::RTTI_C_Dialogue;
-    virtual ~C_Dialogue();        // [0] deleting-dtor sub_1819DF228
-    virtual void _vf1();          // [1] [role UNVERIFIED]
-    virtual void _vf2();          // [2] [role UNVERIFIED]
+    RTTR_ENABLE()  // [0..2] whole vtable, no dtor: get_type 0x1819DF228, get_derived 0x1828322B8
 
     C_Decision m_decision;        // +0x08  root decision (embedded by value, 0x60)
     CryStringT<char> m_name;      // +0x68

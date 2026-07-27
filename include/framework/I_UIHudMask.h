@@ -1,4 +1,5 @@
 #pragma once
+#include "rttr/rttr_enable.h"
 #include "framework/E_HudElements.h"
 
 // -----------------------------------------------
@@ -14,11 +15,6 @@
 //       get_ptr 0x18213A5FC -> sub_1805F5DA0, get_derived_info 0x18213A5C0 -> 0x18191DCB4)
 // Method name coined from behavior (no PDB).
 
-namespace rttr {
-class type;
-namespace detail { struct derived_info; }
-}  // namespace rttr
-
 namespace wh::framework {
 
 class I_UIHudMask {
@@ -26,10 +22,7 @@ public:
     inline static constexpr auto RTTI = Offsets::RTTI_I_UIHudMask;
     virtual ~I_UIHudMask();                                              // [0]
     virtual bool IsElementVisible(E_HudElements::Type element) const = 0;  // [1] 0x180555E04 (impl in C_UIHudMask)
-    // RTTR_ENABLE() trio (thunks into the implementor's reflection functions).
-    virtual rttr::type get_type() const;                                 // [2]
-    virtual void* get_ptr();                                             // [3]
-    virtual rttr::detail::derived_info get_derived_info();               // [4]
+    RTTR_ENABLE()  // [2..4] thunks -0x58; baseless, get_type 0x182B927E4
 };
 static_assert(sizeof(I_UIHudMask) == 8);
 

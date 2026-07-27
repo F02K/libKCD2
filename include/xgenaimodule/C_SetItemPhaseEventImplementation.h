@@ -20,8 +20,9 @@ public:
     void* GetName() override;                            // [1]  sub_1820C22C0 -> "setitemphase"
     bool  Apply(int param, void* ctx) override;          // [2]  sub_1820C24A0
     void  ApplySecondary(int param, void* ctx) override; // [3]  nullsub_1
-    void* BuildStringB(void* out) override;              // [10] sub_1820C3EA0
-    void* GetIdLabel(void* out) override;                // [12] sub_1820C3EC0
+    // trio overrides [10]/[12] ([11] get_ptr inherited); RTTR_ENABLE(<base>) deferred -- base lambda 0x180EE5510 undecoded
+    rttr::type get_type() const override;                    // [10] sub_1820C3EA0
+    rttr::detail::derived_info get_derived_info() override;  // [12] sub_1820C3EC0
 };
 static_assert(sizeof(C_SetItemPhaseEventImplementation) == 0x08, "vptr only (alloc 8)");
 

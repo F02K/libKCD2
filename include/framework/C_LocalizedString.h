@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <string>
+#include "rttr/rttr_enable.h"
 
 // -----------------------------------------------
 // wh::framework::C_LocalizedString -- KCD2 WHGame.dll 1.5.6 (kd7u).  sizeof 0x10.
@@ -10,13 +11,14 @@
 // goes through localization", so the editor/rttr treat it differently from a raw string.
 //
 // RTTI .?AVC_LocalizedString@framework@wh@@ (COL 0x1841C1F00).  Vtable 0x183E1DF40, 3
-// slots -- ALL trivial (no localization happens in the vtable; resolution is external,
-// via the rttr string converter / the loc system when the text is fetched):
-//   [0] dtor           0x180D216C0  -> destroys m_text (CryStringT dtor sub_180D864C0)
-//   [1] _vf1_returnThis 0x1805F5DA0 -> `return this;` (ICF-folded identity; this is the
+// slots -- ALL THREE are the RTTR_ENABLE() trio, NO virtual dtor (no localization happens
+// in the vtable; resolution is external, via the rttr string converter / the loc system
+// when the text is fetched):
+//   [0] get_type         0x180D216C0 (supersedes the old "dtor -> destroys m_text" reading)
+//   [1] get_ptr          0x1805F5DA0 -> `return this;` (ICF-folded identity; this is the
 //                                    "get" used inline in the quest path sub_181F46F40)
-//   [2] _vf2_copyOut   0x180F42C14  -> writes vfptr to out[0] then destroys out->m_text
-//                                    (compiler move/copy-out helper)
+//   [2] get_derived_info 0x180F42C14 -> {this, get_type()} (supersedes the old
+//                                    "copy-out helper" reading)
 //
 // Ctors: default sub_1803D28B4 (sets vftable, m_text = empty), copy sub_1803D32D0.
 // rttr registration: BIDIRECTIONAL type_converter with CryStringT<char>
@@ -43,11 +45,7 @@ namespace wh::framework {
 class C_LocalizedString {
 public:
     inline static constexpr auto RTTI = Offsets::RTTI_C_LocalizedString;
-    virtual ~C_LocalizedString();          // [0] 0x180D216C0  destroys m_text
-    // [1]/[2] are compiler-trivial (return-this / copy-out); kept as raw slots to preserve
-    // the 3-entry vtable layout -- do NOT invent signatures for them.
-    virtual void* _vf1_returnThis();       // [1] 0x1805F5DA0  `return this`
-    virtual void* _vf2_copyOut(void* out); // [2] 0x180F42C14  copy-out helper
+    RTTR_ENABLE()  // [0..2] whole vtable, no dtor: get_type 0x180D216C0, get_derived 0x180F42C14
 
     CryStringT<char> m_text;               // +0x08  authored localizable string (key/text)
 

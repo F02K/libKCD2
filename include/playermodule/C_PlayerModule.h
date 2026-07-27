@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include "rttr/rttr_enable.h"
 #include "framework/C_BaseModule.h"
 #include "Offsets/vtables/ISystem.h"   // Offsets::ISystemEventListener
 
@@ -23,11 +24,6 @@
 // +0x98 below is exposed only as an UNVERIFIED placeholder, not the KCD1 flag.
 //
 // [MODERATE vs KCD1] m_pFastTravel moved +0xB0 -> +0x28 (still an owned C_FastTravel*).
-
-namespace rttr {
-class type;
-namespace detail { struct derived_info; }
-}  // namespace rttr
 
 namespace wh::playermodule {
 
@@ -55,10 +51,9 @@ public:
     // C_BaseModule contributes slots [0..6] only (7-slot base vtable 0x183A83EA8);
     // the 4 extra slots in the 11-slot C_PlayerModule vtable are its OWN:
     virtual void _vf7();                                     // [7]  0x1809DD2D0  role unresolved
-    // RTTR_ENABLE() expansion (same trio as C_GUIModule/C_UIBase [7..9]):
-    virtual rttr::type get_type() const;                     // [8]  0x182EB7BB0
-    virtual void* get_ptr();                                 // [9]  0x1805F5DA0  `return this`
-    virtual rttr::detail::derived_info get_derived_info();   // [10] 0x182EB7954
+    // RTTR trio [8..10]: get_type 0x182EB7BB0, get_ptr 0x1805F5DA0 (`return this`),
+    // get_derived_info 0x182EB7954. Registered BASELESS.
+    RTTR_ENABLE()
 
     // C_BaseModule base occupies +0x00 (vtable) / +0x08 (m_state) / +0x0C (pad);
     // ISystemEventListener base occupies +0x10 (vtable). Members follow at +0x18.

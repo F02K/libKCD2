@@ -1,4 +1,5 @@
 #pragma once
+#include "rttr/rttr_enable.h"
 
 // -----------------------------------------------
 // wh::framework::I_UIHudEvents -- KCD2 WHGame.dll 1.5.6 (kd7u).  Pure interface, 26 slots.
@@ -13,11 +14,6 @@
 // G4 wave). Samples: [0] 0x180515124 flash "ShowItemTransfer"(guid-pair, count, dir);
 // the class also exposes many of these as rttr methods (method_wrapper TDs with
 // CryStringT/int/CryGUID/E_QuestProgress/E_ItemTransferDirection signatures).
-
-namespace rttr {
-class type;
-namespace detail { struct derived_info; }
-}  // namespace rttr
 
 namespace wh::framework {
 
@@ -47,10 +43,7 @@ public:
     virtual void _vf20() = 0;   // [20] 0x180ED4DFC  role UNVERIFIED
     virtual void _vf21() = 0;   // [21] 0x181F78420  role UNVERIFIED
     virtual void _vf22() = 0;   // [22] 0x180ED2C28  role UNVERIFIED
-    // RTTR_ENABLE() trio.
-    virtual rttr::type get_type() const;                        // [23]
-    virtual void* get_ptr();                                    // [24]
-    virtual rttr::detail::derived_info get_derived_info();      // [25]
+    RTTR_ENABLE()  // [23..25] thunks -0x60; baseless (creator 0x181784490); in C_UIHudEvents's RTTR_ENABLE(C_UIBase, I_UIHudEvents)
 };
 static_assert(sizeof(I_UIHudEvents) == 8);
 

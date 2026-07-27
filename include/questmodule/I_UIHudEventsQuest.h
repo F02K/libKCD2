@@ -1,4 +1,5 @@
 #pragma once
+#include "rttr/rttr_enable.h"
 
 // -----------------------------------------------
 // wh::questmodule::I_UIHudEventsQuest -- KCD2 WHGame.dll 1.5.6 (kd7u).  Pure interface, 5 slots.
@@ -14,11 +15,6 @@
 //       display) -- (a2, int, CryStringT)
 // Names coined; exact parameter lists UNVERIFIED.
 
-namespace rttr {
-class type;
-namespace detail { struct derived_info; }
-}  // namespace rttr
-
 namespace wh::questmodule {
 
 class I_UIHudEventsQuest {
@@ -26,10 +22,10 @@ public:
     inline static constexpr auto RTTI = Offsets::RTTI_I_UIHudEventsQuest;
     virtual void ShowQuestEvent(void* a2, int progress, const CryStringT<char>& text, bool bLocalize) = 0;  // [0] 0x180DC855C (coined)
     virtual void QueueQuestEvent(void* a2, int progress, const CryStringT<char>& text) = 0;                 // [1] 0x1817464B4 (coined)
-    // RTTR_ENABLE() trio.
-    virtual rttr::type get_type() const;                        // [2]
-    virtual void* get_ptr();                                    // [3]
-    virtual rttr::detail::derived_info get_derived_info();      // [4]
+    // RTTR trio [2..4] (impl-vtable thunks 0x18213A638/0x18213A5FC/0x18213A584, -0x58).
+    // I_UIHudEventsQuest itself is NOT rttr-registered and appears in no base list.
+    // Slots binary-proven; macro spelling is the inferred idiom.
+    RTTR_ENABLE()
 };
 static_assert(sizeof(I_UIHudEventsQuest) == 8);
 

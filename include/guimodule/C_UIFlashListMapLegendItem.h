@@ -8,8 +8,22 @@
 // wh::guimodule::C_UIFlashListMapLegendItem -- KCD2 WHGame.dll 1.5.6 (kd7u).  sizeof 0x40 (ALLOC-PROVEN).
 // -----------------------------------------------
 // C_UIFlashObject serialization record (flash_leaves.md §1). Creator sub_1815B9A60
-// N=80 (ctor 0x1815B9B38). FillUIArgs override 0x1818AA90C. Names descriptive
+// N=80 (80 - 0x10 _Ref_count_obj2 prefix = 0x40; ctor 0x1815B9B38). vtable 0x183BC4300
+// (6 slots; ??_R4 of the next object sits at 0x183BC4330). FillUIArgs override
+// 0x1818AA90C appends +0x18 int (sub_1803C1D4C), +0x1C int (sub_1803C1DBC), +0x20 BOOL
+// (tag 6, sub_180555244) -- the m_items vector is NOT serialized. Names descriptive
 // (UNVERIFIED); the +0x21 tail is ctor-only.
+//
+// One legend/filter row of the map legend list. Built per emitted POI by the map's POI
+// callback sub_181F48460; that callback special-cases E_MarkType::FastTravel (7) and skips
+// the legend row entirely when sub_181F4A2A0() is false (i.e. in
+// wh::game::E_GameMode::Hardcore), so hardcore loses the fast-travel legend entry as well
+// as the markers. Mark types 8 and 96 take their own branches and are NOT gated there.
+//
+// The m_items tail fills only when the source POI's GetDefMarkType() == 48 (GeneralPoi):
+// the ctor then runs the shared POI enumerator sub_18094EB9C with its own lambda
+// (vtable 0x183BC4300-adjacent _Func_impl_no_alloc<...,void,I_POI&>) to gather the
+// sub-entries. That is the third of the enumerator's three call sites.
 
 namespace wh::guimodule {
 

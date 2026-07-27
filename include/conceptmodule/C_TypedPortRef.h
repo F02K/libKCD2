@@ -1,23 +1,26 @@
 #pragma once
-#include <cstdint>
 #include "C_PortRef.h"
 
 // -----------------------------------------------
-// wh::conceptmodule::C_TypedPortRef<T> -- typed port reference (KCD2 WHGame.dll 1.5.6, kd7u).
+// wh::conceptmodule::C_TypedPortRef<T> -- typed node-side port handle
+// (KCD2 WHGame.dll Steam 1.5.6, e4cp).  sizeof 0x40 (adds NOTHING over C_PortRef).
 // -----------------------------------------------
-// Instantiations seen: <bool> (conceptmodule::C_Effect enabled-port @+0x40),
-// <rpgmodule::S_BuffDefinitionId> (C_BuffEffect @+0xC8),
-// <rpgmodule::S_FactionDefinitionID> (C_TemporaryFactionEffect @+0xC8).  Embedded stride is
-// 0x40 in every host (next member 0x40 after each port); the ctor writes nothing beyond the
-// C_PortRef state, so the +0x38 tail qword is uninitialized [tail role UNVERIFIED -- typed
-// value storage candidate; may simply be padding].
+// 4922 instantiations in the image.  Slot-by-slot vtable dump of <bool> 0x183A460A8,
+// <S_Trigger> 0x183A45E70, <S_TimeSpan> 0x183A429B8, <E_TimeType> 0x183A42A78: all
+// 23 slots byte-identical except [5]/[7] (the per-T rttr trio) -- the T is ONLY an
+// rttr type identity plus non-virtual templated Get()/Set() accessors, fully inlined
+// into node code [bodies UNVERIFIED].  Value path: C_PortRef::GetValue() ->
+// rttr::variant::convert<T>() at the consumer (constants stay raw std::string in the
+// variant until this conversion).  Embedded in hosts at 0x40 stride (e.g. C_Effect
+// +0x40 IsActive, C_If +0x80/+0xC0/+0x100).
 
 namespace wh::conceptmodule {
 
 template <typename T>
 class C_TypedPortRef : public C_PortRef {
 public:
-    _smart_ptr<C_SharedResource> m_boundValue;   // +0x38  bound resource; dtor sub_18266F018 Releases *(this+0x38) via C_SharedResource::Release when C_PortRef::m_flag30 (+0x30) set; set on bind, not at ctor
+    RTTR_ENABLE(C_PortRef)   // [5]/[7] per-instantiation trio
 };
+static_assert(sizeof(C_TypedPortRef<bool>) == 0x40, "C_TypedPortRef<T> adds nothing over C_PortRef");
 
 }  // namespace wh::conceptmodule

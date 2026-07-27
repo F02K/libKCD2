@@ -97,7 +97,8 @@ public:
     C_Item* LookupByWUID(const wh::framework::WUID& wuid);
 
     S_WuidKeyHolder m_keyHolderA;                      // +0x08   {sentinel, WUID key} holder
-    S_WuidKeyHolder m_keyHolderB;                      // +0x18
+    S_WuidKeyHolder m_keyHolderB;                      // +0x18   owner index: C_Item::SetOwner (0x181F0F730)
+                                                       //         upserts via 0x1804CA7EC(mgr+0x18, item, flag)
     S_WuidHash40    m_wuidHashA;                        // +0x28   WUID->u16 inline-bucket hash (40 buckets)
     S_WuidHash40    m_wuidHashB;                        // +0x88
     S_WuidKeyedHash m_wuidHashC;                        // +0xE8   keyed variant (0x70)

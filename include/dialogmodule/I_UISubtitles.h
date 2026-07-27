@@ -1,4 +1,5 @@
 #pragma once
+#include "rttr/rttr_enable.h"
 
 // -----------------------------------------------
 // wh::dialogmodule::I_UISubtitles -- KCD2 WHGame.dll 1.5.6 (kd7u).  Pure interface, 6 slots.
@@ -13,11 +14,6 @@
 //   [2] 0x1817990CC  flash "ClearSubtitles"()
 // Names from behavior/flash names; [1] tail param roles UNVERIFIED.
 
-namespace rttr {
-class type;
-namespace detail { struct derived_info; }
-}  // namespace rttr
-
 namespace wh::dialogmodule {
 
 class I_UISubtitles {
@@ -27,10 +23,7 @@ public:
     virtual void ShowSubtitle(const CryStringT<char>& text, const CryStringT<char>& speaker,
                               bool a4, bool bForce, bool a6) = 0; // [1] 0x181457948
     virtual void ClearSubtitles() = 0;                            // [2] 0x1817990CC flash "ClearSubtitles"
-    // RTTR_ENABLE() trio.
-    virtual rttr::type get_type() const;                          // [3]
-    virtual void* get_ptr();                                      // [4]
-    virtual rttr::detail::derived_info get_derived_info();        // [5]
+    RTTR_ENABLE()  // [3..5] thunks -0x58; baseless, get_type 0x182B92838
 };
 static_assert(sizeof(I_UISubtitles) == 8);
 

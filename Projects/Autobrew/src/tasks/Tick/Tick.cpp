@@ -5,6 +5,7 @@
 #include <cstring>
 
 #include "crysystem/SSystemGlobalEnvironment.h"
+#include "Offsets/vtables/ITimer.h"
 #include "entitymodule/C_Actor.h"
 #include "entitymodule/C_Inventory.h"
 #include "playermodule/C_ActionSets.h"
@@ -35,6 +36,11 @@ void Executor::Tick()
 {
     auto* alc = m_pAlchemy;
     auto& bs = alc->m_brewState;
+    auto* env = SSystemGlobalEnvironment::GetInstance();
+    const bool haveGameClock = env && env->pTimer;
+    const double now = haveGameClock
+        ? env->pTimer->GetCurrTimeD(Offsets::ITimer::ETIMER_GAME)
+        : 0.0;
 
     // ---- world snapshot ----
     const char* context   = alc->m_currentContext.c_str();
@@ -164,23 +170,67 @@ void Executor::Tick()
                 ReturnToIdle();
             break;
         }
+        const S_PlanOp& op = m_plan[m_planCursor];
+        // Boil ops keep running DURING verb montages: they only monitor accrual and feed
+        // the input buffer (the continuous-bellows chain depends on it); every dispatching
+        // op still waits the Verb slot out.
+        const bool boilOp = op.kind == S_PlanOp::BoilWeak || op.kind == S_PlanOp::BoilStrong;
+
+        const auto clearStall = [&]() {
+            m_op.stallActive = false;
+            m_op.stallStartedAt = 0.0;
+            m_op.nextStallLogAt = 0.0;
+        };
+        const auto markStall = [&]() {
+            if (!haveGameClock)
+                return;
+            // ResetTimer cannot normally occur during a live brew, but restarting the window is
+            // safer than interpreting a backwards clock jump as an enormous elapsed duration.
+            if (!m_op.stallActive || now < m_op.stallStartedAt) {
+                m_op.stallActive = true;
+                m_op.stallStartedAt = now;
+                m_op.nextStallLogAt = now + kStallLogIntervalSeconds;
+            }
+        };
+        const auto stallElapsed = [&]() {
+            return m_op.stallActive && now >= m_op.stallStartedAt
+                ? now - m_op.stallStartedAt
+                : 0.0;
+        };
+        const auto logStall = [&]() {
+            if (!m_op.stallActive || now < m_op.nextStallLogAt)
+                return;
+            if (env && env->pLog) {
+                env->pLog->LogAlways(
+                    "[Autobrew] stalled %.2f seconds: op %zu/%zu kind %d verb %d canPerform %d "
+                    "state %d verbBusy %d potFire %d potMoving %d X %.2f pending %d mode %d",
+                    stallElapsed(), m_planCursor, m_plan.size(), int(op.kind), int(op.verb),
+                    int(alc->CanPerformVerb(op.verb)), int(alc->GetEffectiveState()),
+                    int(verbBusy), int(bs.m_potOnFire), int(bs.m_potMoving),
+                    bs.m_fireIntensity, int(alc->m_pendingVerb), int(bs.m_mode));
+            }
+            // Do not emit a burst of catch-up lines after one unusually long frame.
+            m_op.nextStallLogAt = now + kStallLogIntervalSeconds;
+        };
+
+        // Director occupancy means the previously dispatched native action is still valid.  In
+        // particular C_UseMortarAction temporarily changes mode Brewing -> Grinding -> Brewing;
+        // only judge a non-Brewing mode after that action has actually left the Verb slot.
+        if (verbBusy && !boilOp) {
+            clearStall();
+            break;
+        }
         if (!brewing) {
-            ++m_op.stallFrames;
-            if (m_op.stallFrames > kStallAbortFrames)
+            markStall();
+            logStall();
+            if (stallElapsed() >= kStallAbortSeconds)
                 AbortRun("brewing was interrupted");
             break;
         }
         {
-            const S_PlanOp& op = m_plan[m_planCursor];
-            // Boil ops keep running DURING verb montages: they only monitor accrual and feed
-            // the input buffer (the continuous-bellows chain depends on it); every dispatching
-            // op still waits the Verb slot out.
-            const bool boilOp = op.kind == S_PlanOp::BoilWeak || op.kind == S_PlanOp::BoilStrong;
-            if (verbBusy && !boilOp) {   // a verb action is playing
-                m_op.stallFrames = 0;
-                break;
-            }
             bool advanced = false;
+            bool progressed = false;
+            bool boilTimedOut = false;
             switch (op.kind) {
             case S_PlanOp::DoVerb:
                 if (alc->CanPerformVerb(op.verb)) {
@@ -220,7 +270,7 @@ void Executor::Tick()
                 // swing per dispatch.  Advance only once the position byte reads back.
                 if (alc->CanPerformVerb(E_AlchemyVerb::MovePotBack)) {
                     alc->PerformVerb(E_AlchemyVerb::MovePotBack);
-                    m_op.stallFrames = 0;
+                    progressed = true;
                 }
                 break;
             }
@@ -237,6 +287,17 @@ void Executor::Tick()
                 if (!m_op.baselineTaken) {
                     m_op.baselineTaken = true;
                     m_op.boilBaseline = accrued;
+                }
+                if (haveGameClock
+                    && (!m_op.boilTimerActive || now < m_op.boilStartedAt)) {
+                    m_op.boilTimerActive = true;
+                    m_op.boilStartedAt = now;
+                }
+                if (m_op.boilTimerActive
+                    && now - m_op.boilStartedAt
+                           >= 2.0 * static_cast<double>(op.targetSeconds) + kBoilGraceSeconds) {
+                    boilTimedOut = true;
+                    break;
                 }
                 if (accrued - m_op.boilBaseline >= op.targetSeconds) {
                     if (strong && alc->m_pendingVerb == E_AlchemyVerb::UseBellows)
@@ -256,35 +317,28 @@ void Executor::Tick()
                     else if (alc->m_pendingVerb == E_AlchemyVerb::UseBellows)
                         alc->m_pendingVerb = E_AlchemyVerb::None;
                 }
-                m_op.stallFrames = 0;   // waiting on wall-clock accrual IS progress...
-                if (++m_op.boilFrames > static_cast<int>(120.0f * op.targetSeconds) + 3600)
-                    m_op.stallFrames = kStallAbortFrames + 1;   // ...unless 2x the window + 60 s pass
+                progressed = true;   // waiting on the resource's game-time accrual is progress
                 break;
             }
+            }
+            if (boilTimedOut) {
+                AbortRun("boiling timed out");
+                break;
             }
             if (advanced) {
                 ++m_planCursor;
                 m_op = {};
+            } else if (progressed) {
+                clearStall();
             } else {
-                ++m_op.stallFrames;
+                markStall();
             }
         }
-        // Wedge diagnostics: a state snapshot to kcd.log every ~2 s of no progress, so a stall
-        // in the field pins the exact op + gate instead of guessing.
-        if (m_op.stallFrames > 0 && m_op.stallFrames % 240 == 0) {
-            if (auto* env = SSystemGlobalEnvironment::GetInstance(); env && env->pLog) {
-                const S_PlanOp& op = m_plan[m_planCursor];
-                env->pLog->LogAlways(
-                    "[Autobrew] stalled %d frames: op %zu/%zu kind %d verb %d canPerform %d "
-                    "state %d verbBusy %d potFire %d potMoving %d X %.2f pending %d mode %d",
-                    m_op.stallFrames, m_planCursor, m_plan.size(), int(op.kind), int(op.verb),
-                    int(alc->CanPerformVerb(op.verb)), int(alc->GetEffectiveState()),
-                    int(verbBusy), int(bs.m_potOnFire), int(bs.m_potMoving),
-                    bs.m_fireIntensity, int(alc->m_pendingVerb), int(bs.m_mode));
-            }
-        }
-        if (m_op.stallFrames > kStallAbortFrames)   // wedged (missing herb, blocked verb...)
-            AbortRun("stalled");                    // the 2 s snapshots above pin the op
+        // Wedge diagnostics use the same game clock as the abort, so their cadence is stable at
+        // every frame rate and pauses/time scaling track the native alchemy actions.
+        logStall();
+        if (stallElapsed() >= kStallAbortSeconds)
+            AbortRun("stalled");   // the 2 s snapshots above pin the op and failing gate
         break;
     }
     }

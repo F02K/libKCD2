@@ -51,6 +51,13 @@ class C_ShowMapMarker
 {
 public:
     inline static constexpr auto RTTI = Offsets::RTTI_C_ShowMapMarker;
+    // Original source carries RTTR_ENABLE(C_Effect): registered
+    // "wh::guimodule::C_ShowMapMarker" (get_type 0x1813693D8, sizeof imm 0x120), base
+    // list lambda 0x180E23CC0 appends C_Effect (sole direct base; C_Effect itself HAS
+    // further bases, lambda 0x180C395A0). Trio = primary-vtable overrides at [5..7].
+    // NOT declared here because the conceptmodule tranche does not model the 46-slot
+    // C_Effect vtable as C++ virtuals yet -- adding only the trio would mis-place it
+    // at slots [0..2]. Migrate together with the conceptmodule virtual-slot wave.
     // I_ObjectManagerBaseListener: target removed -> hide the marker.
     void OnObjectEvent(int event) override;   // 0x182B37FEC
 

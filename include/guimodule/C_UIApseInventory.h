@@ -39,7 +39,7 @@ public:
     void _vf1() override;   // [1] 0x1811A2850  role UNVERIFIED
     void _vf2() override;   // [2] 0x1811A29B8  role UNVERIFIED
 
-    void*     m_unk5D8;                   // +0x5D8  ctor 0 [role UNVERIFIED]
+    // (+0x5D8 = inherited I_UIDragAndDropTarget::m_dragCtx08, ctor 0)
     C_UIApse* m_pApse;                    // +0x5E0  owner hub (ctor a2)
     C_UIModalDialogHealing m_healingDialog; // +0x5E8  (0x100) "ApseModalDialog"
     C_UIModalDialogCombine m_combineDialog; // +0x6E8  (0x2C8) "ApseModalDialog" (ctor sub_181951CE4)

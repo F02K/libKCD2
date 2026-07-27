@@ -2,6 +2,7 @@
 #include <cstdint>
 #include "../framework/C_LocalizedString.h"
 #include "../CryEngine/CryCommon/CryString.h"
+#include "rttr/rttr_enable.h"
 
 // -----------------------------------------------
 // wh::dialogmodule::data::S_Response -- dialogue response record (KCD2 1.5.6, kd7u).
@@ -18,9 +19,7 @@ namespace wh::dialogmodule::data {
 struct S_Response {
     inline static constexpr auto RTTI = Offsets::RTTI_S_Response;
     virtual ~S_Response();                 // [0] deleting-dtor sub_180D2B1D8
-    virtual void _vf1();                   // [1] [role UNVERIFIED]
-    virtual void _vf2();                   // [2] [role UNVERIFIED]
-    virtual void _vf3();                   // [3] [role UNVERIFIED]
+    RTTR_ENABLE()  // [1..3]: get_type 0x181A6DAB4, get_derived 0x180EFB524
 
     bool     m_hasText;                    // +0x08
     uint8_t  _pad09[7];                    // +0x09

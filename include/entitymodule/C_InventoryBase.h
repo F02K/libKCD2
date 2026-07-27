@@ -29,6 +29,25 @@ public:
     // (0x181FFE040) adds a one-hop substitute retry via the item-class registry
     // (sub_180468340(qword_185325820) -> class vf+0x138 -> +0x100 guid) that is NOT wired yet.
     C_Item* FindItemByClass(const CryGUID& classId);
+    // The sanctioned in-inventory amount change (Lua DeleteItem's partial-removal path):
+    // pre-check 0x18179D064, pre-notify 0x18179CFBC, C_Item::SetAmount(amount+delta), post-notify
+    // 0x18179D124, then item broadcast 0x1804664E0. Returns false if the pre-check vetoes.
+    // 0x18179CF50
+    bool ChangeItemAmount(C_Item* item, int32_t delta);
+    // Full-removal core (Lua DeleteItem with count >= amount): fires the listener trio on this
+    // inventory AND the item's +0x98 holder (reason codes 1/4 holder-held vs 5 plain), delists,
+    // and reports class+wuid to the post-remove listeners.  reason: 2 = script delete (observed);
+    // count values below the stack size reroute to ChangeItemAmount.  0x180479758
+    void RemoveItem(C_Item* item, uint32_t reason, uint32_t count);
+    // The MoveItem core, called on the DESTINATION inventory (Lua MoveItemOfClass's per-item op):
+    // count 0 = whole stack; splits the stack (0x1808F0DA4) on partial moves, merges into an
+    // existing same-class stack when found (finder 0x1804CCD4C, merge 0x1808F3300), assigns a
+    // fresh instance guid on un-merged full moves (SetInstanceGuid 0x180467A6C), then re-parents
+    // (item+0x90 = this, +0x98 = 0) and runs both inventories' listener trios. Returns the
+    // surviving item (moved or merge target), null when the acceptance check (this vf+0x68)
+    // vetoes.  unkOwnerFlag [U role]: gates the merge search (0x1808D56D0); the keep-owner move
+    // path passes 1, the change-owner path 0.  0x1808D534C
+    C_Item* MoveItemIn(C_Item* item, uint32_t count, bool unkOwnerFlag);
 
     std::vector<C_Item*>       m_items;        // +0x08  held items  VERIFIED layout
     std::vector<C_ItemHolder*> m_items2;       // +0x20  secondary list (role/elem type UNVERIFIED)

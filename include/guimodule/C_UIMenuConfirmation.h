@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include "rttr/rttr_enable.h"
 #include "guimodule/E_ConfirmationId.h"
 #include "framework/C_LocalizedString.h"
 
@@ -13,20 +14,12 @@
 // rttr props: int, C_LocalizedString (x3), E_ConfirmationId::Type. Member names inferred
 // from types.
 
-namespace rttr {
-class type;
-namespace detail { struct derived_info; }
-}  // namespace rttr
-
 namespace wh::guimodule {
 
 class C_UIMenuConfirmation {
 public:
     inline static constexpr auto RTTI = Offsets::RTTI_C_UIMenuConfirmation;
-    // RTTR_ENABLE() trio -- the WHOLE vtable ([0..2]); no virtual dtor.
-    virtual rttr::type get_type() const;                     // [0]
-    virtual void* get_ptr();                                 // [1] 0x1805F5DA0
-    virtual rttr::detail::derived_info get_derived_info();   // [2]
+    RTTR_ENABLE()  // [0..2] whole vtable, no dtor: get_type 0x181A6CAD8, get_derived 0x182B3E6D0
 
     E_ConfirmationId::Type m_confirmationId;   // +0x08  identity key (DefaultKeyExtractor)
     uint8_t _pad09[7];                         // +0x09

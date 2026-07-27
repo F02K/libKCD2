@@ -1,13 +1,14 @@
 #pragma once
 #include <cstdint>
 #include "../CryEngine/CryCommon/CryString.h"
+#include "rttr/rttr_enable.h"
 
 // -----------------------------------------------
 // wh::dialogmodule::data::C_DialogueProp -- dialogue prop record (KCD2 1.5.6, kd7u).
 // sizeof 0x28.
 // -----------------------------------------------
-// RTTI TD 0x184B6F228; vtable 0x183B764C8 (3 slots); ctor sub_1813C7024; deleting-dtor
-// [0] sub_180EC3B50. A prop used during a conversation (bound by the C_*PropCommand
+// RTTI TD 0x184B6F228; vtable 0x183B764C8 = RTTR trio ONLY, no virtual dtor (see class
+// body); ctor sub_1813C7024. A prop used during a conversation (bound by the C_*PropCommand
 // timeline commands). Field roles UNVERIFIED.
 
 namespace wh::dialogmodule::data {
@@ -15,9 +16,7 @@ namespace wh::dialogmodule::data {
 class C_DialogueProp {
 public:
     inline static constexpr auto RTTI = Offsets::RTTI_C_DialogueProp;
-    virtual ~C_DialogueProp();   // [0] deleting-dtor sub_180EC3B50
-    virtual void _vf1();         // [1] [role UNVERIFIED]
-    virtual void _vf2();         // [2] [role UNVERIFIED]
+    RTTR_ENABLE()  // [0..2] whole vtable, no dtor: get_type 0x180EC3B50, get_derived 0x1828322D8
 
     CryStringT<char> m_arr08;    // +0x08  COW array [role UNVERIFIED]
     uint8_t  m_b10;              // +0x10  [role UNVERIFIED]

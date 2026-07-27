@@ -95,11 +95,14 @@ private:
                                                                //   base-liquid record)
     };
 
-    struct S_OpRuntime {            // per-op scratch -- reset wholesale (`m_op = {}`) on advance
-        int   stallFrames   = 0;    // frames without progress; kStallAbortFrames aborts the brew
-        int   boilFrames    = 0;    // frames inside the current Boil* op (its own watchdog)
-        float boilBaseline  = 0.0f; // stage clock zero: the base-record accumulator at op start
-        bool  baselineTaken = false;
+    struct S_OpRuntime {               // per-op scratch -- reset wholesale (`m_op = {}`) on advance
+        double stallStartedAt  = 0.0;   // ETIMER_GAME timestamp: continuous no-progress window
+        double nextStallLogAt  = 0.0;   // absolute timestamp for the next wedge snapshot
+        double boilStartedAt   = 0.0;   // hard-deadline clock for the current Boil* op
+        float  boilBaseline    = 0.0f;  // stage zero: base-resource accumulator at op start
+        bool   stallActive     = false;
+        bool   boilTimerActive = false;
+        bool   baselineTaken   = false;
     };
 
     static wh::playermodule::I_ActionSets* GetActionSets();
@@ -136,7 +139,9 @@ private:
     void ReturnToIdle();   // unified teardown: finish, cancel and stall-abort all land here
     void AbortRun(const char* reason);   // loud ReturnToIdle: kcd.log line + center toast
 
-    static constexpr int kStallAbortFrames = 600;   // ~10 s without progress -> abort the brew
+    static constexpr double kStallAbortSeconds      = 10.0; // continuous no-progress limit
+    static constexpr double kStallLogIntervalSeconds = 2.0; // wedge snapshot cadence
+    static constexpr double kBoilGraceSeconds        = 60.0; // beyond 2x the requested window
 
     // soul_ability__autobrew.xml row, granted by the "Routine" perk (perk__autobrew.xml,
     // alchemy tree).  Vanilla ability ids stop around ~130; >= 200 is mod space -- the

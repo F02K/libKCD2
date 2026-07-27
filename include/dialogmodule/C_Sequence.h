@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include "../CryEngine/CryCommon/CryString.h"
+#include "rttr/rttr_enable.h"
 
 // -----------------------------------------------
 // wh::dialogmodule::data::C_Sequence -- dialogue sequence (spoken line + anim/camera
@@ -17,9 +18,7 @@ class C_Sequence {
 public:
     inline static constexpr auto RTTI = Offsets::RTTI_C_Sequence;
     virtual ~C_Sequence();       // [0] deleting-dtor sub_1803C12CC
-    virtual void _vf1();         // [1] [role UNVERIFIED]
-    virtual void _vf2();         // [2] [role UNVERIFIED]
-    virtual void _vf3();         // [3] [role UNVERIFIED]
+    RTTR_ENABLE()  // [1..3]: get_type 0x181A6CC98, get_derived 0x180F2B20C
 
     uint8_t  _unk08[0x38];       // +0x08..+0x3F  container heads [not walked]
     int32_t  m_d40;              // +0x40  ctor 1

@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include "rttr/rttr_enable.h"
 #include "E_CutsceneType.h"
 
 // -----------------------------------------------
@@ -19,11 +20,6 @@
 // int per leaf (TrackView `return 5`), [7] 0x182B377FC `return m_pSequence != 0`.
 // Signatures beyond the coined shapes UNVERIFIED.
 
-namespace rttr {
-class type;
-namespace detail { struct derived_info; }
-}  // namespace rttr
-
 namespace wh::guimodule {
 
 class I_Cutscene {
@@ -38,10 +34,10 @@ public:
     virtual E_CutsceneType::Type GetType() const = 0;        // [6] name coined; per-leaf constant (E_CutsceneType)
     virtual bool IsActive() const = 0;                       // [7] name coined (`return m_pSequence != 0`)
     virtual void _vf8();                                     // [8] defaulted nullsub; role UNVERIFIED (Skip/CanSkip?)
-    // RTTR_ENABLE() expansion.
-    virtual rttr::type get_type_rttr() const;                // [9] 0x182B3EC24 (renamed: [6] owns "GetType")
-    virtual void* get_ptr();                                 // [10] 0x1805F5DA0
-    virtual rttr::detail::derived_info get_derived_info();   // [11] 0x182B3E710
+    // RTTR trio [9..11]: get_type 0x182B3EC24, get_ptr 0x1805F5DA0, get_derived_info
+    // 0x182B3E710. Registered BASELESS (sizeof imm 0x60). No clash with the game's own
+    // GetType [6] -- different identifier (was previously mis-modeled as get_type_rttr).
+    RTTR_ENABLE()
 
     CryStringT<char> m_name;          // +0x08  cutscene name (db key; autocompleter source)
     uint8_t          m_flag10;        // +0x10  ctor 0 [role UNVERIFIED]

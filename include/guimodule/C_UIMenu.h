@@ -55,6 +55,7 @@ public:
     // OnModuleMessage [3] 0x18085DDC0, Update [4] 0x1810C31A0, get_type [7]
     // 0x180ED549C, get_derived_info [9] 0x1819A2894.
     // IActionListener::OnAction = 0x180557658; I_UIMenu impls: see I_UIMenu.h.
+    RTTR_ENABLE(C_UIBase, wh::I_UIMenu)  // trio override, no new slots; args from base lambda 0x180EE4C90 (I_UIMenu adjustor 0x181F47840)
 
     // --- Native methods (RVA forwarders in src/guimodule/C_UIMenu.cpp) ---
     // Open a page: writes m_currentPageId, then flash "ClearAll" -> "SetMenuColor"

@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include "rttr/rttr_enable.h"
 #include "guimodule/E_MenuPage.h"
 #include "framework/C_LocalizedString.h"
 
@@ -17,20 +18,12 @@
 // m_buttonHalfWidth) -- the menu_pages.xml columns ContainerX/ContainerY/MaxButtons/
 // [Button]HalfWidth (ctor defaults 1500/370/8/196).
 
-namespace rttr {
-class type;
-namespace detail { struct derived_info; }
-}  // namespace rttr
-
 namespace wh::guimodule {
 
 class C_UIMenuPage {
 public:
     inline static constexpr auto RTTI = Offsets::RTTI_C_UIMenuPage;
-    // RTTR_ENABLE() trio -- the WHOLE vtable ([0..2]); no virtual dtor.
-    virtual rttr::type get_type() const;                     // [0]
-    virtual void* get_ptr();                                 // [1] 0x1805F5DA0
-    virtual rttr::detail::derived_info get_derived_info();   // [2]
+    RTTR_ENABLE()  // [0..2] whole vtable, no dtor: get_type 0x181A6CABC, get_derived 0x182B3E6F0
 
     E_MenuPage::Type m_pageId;                 // +0x08  identity key (DefaultKeyExtractor), ctor 0
     uint8_t _pad09[7];                         // +0x09

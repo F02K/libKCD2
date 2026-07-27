@@ -62,8 +62,12 @@ public:
     virtual void InventorySoulUnk37() = 0;                                    // [37] sub_18087AAB8 [U signature]
     virtual void InventorySoulUnk38() = 0;                                    // [38] sub_18068C0C4 [U signature]
     virtual void InventorySoulUnk39() = 0;                                    // [39] sub_181FE1810 [U signature]
-    virtual void InventorySoulUnk40() = 0;                                    // [40] sub_1808EEE6C [U signature]
-    virtual void InventorySoulUnk41() = 0;                                    // [41] sub_1808C7430 [U signature]
+    // [40] sub_1808EEE6C  EQUIP -- the Lua EquipInventoryItem route (0x1808ED9E4): actor+0x668
+    // soul -> soul vf+0x1E0 (returns &m_inventorySoul) -> this slot (item, 1).
+    // a2 role [U] (all traced callers pass 1); return [U] (callers propagate rax, Lua discards).
+    virtual void EquipItem(entitymodule::C_Item* item, bool a2) = 0;
+    // [41] sub_1808C7430  UNEQUIP -- same chain from Lua UnequipInventoryItem (0x1808C73D0).
+    virtual void UnequipItem(entitymodule::C_Item* item, bool a2) = 0;
     virtual void InventorySoulUnk42() = 0;                                    // [42] sub_1811A2E60 [U signature]
     virtual void* InventorySoulUnk43() = 0;                                   // [43] sub_18087E308
     virtual void* InventorySoulUnk44() = 0;                                   // [44] sub_18087E2F4

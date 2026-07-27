@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include "rttr/rttr_enable.h"
 
 // -----------------------------------------------
 // wh::dialogmodule::I_UIHudInteractiveDialog -- KCD2 WHGame.dll 1.5.6 (kd7u).  Pure interface, 22 slots.
@@ -16,11 +17,6 @@
 //   [3] 0x1808BCE18  flash "SetActiveSequenceChanged"(int, int)
 // NOTE [14] and [17] share one impl (0x181F7A440) -- two interface methods with the
 // same body, kept as separate slots.
-
-namespace rttr {
-class type;
-namespace detail { struct derived_info; }
-}  // namespace rttr
 
 namespace wh::dialogmodule {
 
@@ -46,10 +42,7 @@ public:
     virtual void _vf16() = 0;                                     // [16] 0x181F78610  role UNVERIFIED
     virtual void _vf17() = 0;                                     // [17] 0x181F7A440  role UNVERIFIED (shared with [14])
     virtual void _vf18() = 0;                                     // [18] 0x180566258  role UNVERIFIED
-    // RTTR_ENABLE() trio.
-    virtual rttr::type get_type() const;                          // [19]
-    virtual void* get_ptr();                                      // [20]
-    virtual rttr::detail::derived_info get_derived_info();        // [21]
+    RTTR_ENABLE()  // [19..21] thunks -0x58; baseless, get_type 0x182B927C8
 };
 static_assert(sizeof(I_UIHudInteractiveDialog) == 8);
 

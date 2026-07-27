@@ -18,8 +18,9 @@ public:
     void* GetName() override;                            // [1]  sub_180EE5A44 -> "detachobject"
     bool  Apply(int param, void* ctx) override;          // [2]  sub_1818645F0
     void  ApplySecondary(int param, void* ctx) override; // [3]  nullsub_1
-    void* BuildStringB(void* out) override;              // [10] sub_181A6D280
-    void* GetIdLabel(void* out) override;                // [12] sub_18343466C
+    // trio overrides [10]/[12] ([11] get_ptr inherited); RTTR_ENABLE(<base>) deferred -- base lambda 0x180D1E8B4 undecoded
+    rttr::type get_type() const override;                    // [10] sub_181A6D280
+    rttr::detail::derived_info get_derived_info() override;  // [12] sub_18343466C
 };
 static_assert(sizeof(C_DetachEventImplementation) == 0x08, "vptr only (alloc 8)");
 

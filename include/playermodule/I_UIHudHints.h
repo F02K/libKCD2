@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include "rttr/rttr_enable.h"
 
 // -----------------------------------------------
 // wh::playermodule::I_UIHudHints -- KCD2 WHGame.dll 1.5.6 (kd7u).  Pure interface, 10 slots.
@@ -11,11 +12,6 @@
 // [7..9] (0x18213A650/0x18213A5FC/0x18213A59C). No virtual dtor slot.
 // Sampled bodies: [1] 0x180C4488C flash "SetProgress"(clamp(pct*100,-100,100), a3, a4);
 // [2] 0x1812C1544 flash call (CryStringT, int, int). Others UNVERIFIED (G4 scope).
-
-namespace rttr {
-class type;
-namespace detail { struct derived_info; }
-}  // namespace rttr
 
 namespace wh::playermodule {
 
@@ -29,10 +25,11 @@ public:
     virtual void _vf4() = 0;                                        // [4] 0x180C4554C  role UNVERIFIED
     virtual void _vf5() = 0;                                        // [5] 0x1816CF87C  role UNVERIFIED
     virtual void _vf6() = 0;                                        // [6] 0x1819C6948  role UNVERIFIED
-    // RTTR_ENABLE() trio.
-    virtual rttr::type get_type() const;                            // [7]
-    virtual void* get_ptr();                                        // [8]
-    virtual rttr::detail::derived_info get_derived_info();          // [9]
+    // RTTR trio [7..9] (impl-vtable thunks 0x18213A650/0x18213A5FC/0x18213A59C, -0x58).
+    // I_UIHudHints itself is NOT rttr-registered and appears in no base list --
+    // C_UIHudHints's macro is RTTR_ENABLE(C_UIBase, I_UIDragAndDropViewer). The trio
+    // slots here are binary-proven; the macro spelling is the inferred idiom.
+    RTTR_ENABLE()
 };
 static_assert(sizeof(I_UIHudHints) == 8);
 

@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include "rttr/rttr_enable.h"
 
 // -----------------------------------------------
 // wh::entitymodule::S_TypedItemClass -- the typed-mixin secondary base of every CONCRETE item
@@ -17,9 +18,7 @@ namespace wh::entitymodule {
 
 struct S_TypedItemClass {
     virtual void unk0() = 0;   // [0] herb thunk -> 0x182A44084 (dtor region)
-    virtual void unk1() = 0;   // [1] herb thunk -> 0x18161D250 [role UNVERIFIED]
-    virtual void unk2() = 0;   // [2] herb thunk -> 0x1805F5DA0 (`return this` main object -- GetItemClass candidate)
-    virtual void unk3() = 0;   // [3] herb thunk -> 0x18096F850 [role UNVERIFIED]
+    RTTR_ENABLE()  // [1..3]: get_type 0x182A2446C, get_derived 0x182A23FAC (herb 2nd-vtable thunks -> herb's own trio)
 
     int32_t m_unk08 = -1;      // +0x08  ctor -1; Type=/SubType= column binding UNVERIFIED
     int32_t m_unk0C = -1;      // +0x0C  ctor -1

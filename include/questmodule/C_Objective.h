@@ -28,9 +28,9 @@ class C_Objective : public conceptmodule::C_AutoTriggerable<conceptmodule::C_Tem
 public:
     inline static constexpr auto RTTI = Offsets::RTTI_C_Objective;
     framework::S_ResourceHandle m_ref48;                     // +0x48  (&unk_1856691B8) [target UNVERIFIED]
-    conceptmodule::C_PortRef m_port58;                       // +0x58  untyped port (sub_1806B2890)
-    _smart_ptr<conceptmodule::C_SharedResource> m_port58BoundValue;  // +0x90  bound-value tail of the m_port58 port (m_port58+0x38);
-                                                             //        port dtor sub_1806B30CC releases +0x38 when m_flag30(+0x88) set. Set on bind, not by ctor.
+    conceptmodule::C_PortRef m_port58;                       // +0x58  untyped port ref (sub_1806B2890); its lazy cache
+                                                             //        (m_resolved @+0x88, m_cachedPort @+0x90) is filled on
+                                                             //        first resolve, not by the ctor (dtor sub_1806B30CC)
     conceptmodule::C_TypedPortRef<S_Tracker> m_trackerPort;  // +0x98  objective tracker port
     CryStringT<char> m_name;                                 // +0xD8  objective name shown on map/compass markers
                                                              //        (VERIFIED: read as the marker name by sub_180DC5F24

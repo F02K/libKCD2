@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include "rttr/rttr_enable.h"
 #include "framework/E_UIApseView.h"
 
 // -----------------------------------------------
@@ -16,11 +17,6 @@
 // 0x180C42D28, 0x1819A6CF0, 0x182AFF600, 0x182AFF550, 0x182AFF6B0, 0x180B68E78,
 // 0x1811A07D0, 0x182AFEA04, 0x1809E5B50, 0x182B009D8). Declared as coined _vfNN slots;
 // signatures default to void() until traced.
-
-namespace rttr {
-class type;
-namespace detail { struct derived_info; }
-}  // namespace rttr
 
 namespace wh::framework {
 
@@ -45,10 +41,7 @@ public:
     virtual void _vf13() = 0;                               // [13] role UNVERIFIED
     virtual void _vf14() = 0;                               // [14] role UNVERIFIED
     virtual void _vf15() = 0;                               // [15] role UNVERIFIED
-    // RTTR_ENABLE() expansion.
-    virtual rttr::type get_type() const;                    // [16] 0x182B03A04
-    virtual void* get_ptr();                                // [17] 0x1805F5DA0
-    virtual rttr::detail::derived_info get_derived_info();  // [18] 0x182B0391C
+    RTTR_ENABLE()  // [16..18]: get_type 0x182B03A04, get_derived 0x182B0391C; baseless; in C_UIApse's RTTR_ENABLE(C_UIBase, I_UIApse)
 };
 static_assert(sizeof(I_UIApse) == 8);
 

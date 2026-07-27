@@ -1,4 +1,5 @@
 #pragma once
+#include "rttr/rttr_enable.h"
 
 // -----------------------------------------------
 // wh::playermodule::I_UIGameOver -- KCD2 WHGame.dll 1.5.6 (kd7u).  Pure interface, 5 slots.
@@ -14,11 +15,6 @@
 //   [1] 0x182BB9A78  Hide: cancels the fader handle (vf[+0x10](0)) + teardown
 // Names coined from behavior.
 
-namespace rttr {
-class type;
-namespace detail { struct derived_info; }
-}  // namespace rttr
-
 namespace wh::playermodule {
 
 class I_UIGameOver {
@@ -26,10 +22,11 @@ public:
     inline static constexpr auto RTTI = Offsets::RTTI_I_UIGameOver;
     virtual void Show(const CryStringT<char>& text, int mode, void* pPayload) = 0;  // [0] 0x182BBB120 (param roles partially UNVERIFIED)
     virtual void Hide() = 0;                                                        // [1] 0x182BB9A78
-    // RTTR_ENABLE() trio.
-    virtual rttr::type get_type() const;                                            // [2]
-    virtual void* get_ptr();                                                        // [3]
-    virtual rttr::detail::derived_info get_derived_info();                          // [4]
+    // RTTR trio [2..4] (impl-vtable thunks 0x18213A8D8/0x18213A5FC/0x18213A890, -0x58).
+    // I_UIGameOver itself is NOT rttr-registered and appears in no base list
+    // (C_UIGameOver's macro is RTTR_ENABLE(C_UIBase)). Slots binary-proven; macro
+    // spelling is the inferred idiom.
+    RTTR_ENABLE()
 };
 static_assert(sizeof(I_UIGameOver) == 8);
 
