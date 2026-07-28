@@ -37,7 +37,7 @@ void CScriptBind_ItemManagerExt::Attach(Offsets::IScriptSystem* pSS, Offsets::IS
     RegisterFunction("SetItemCondition", "itemId, condition", functor(*this, &CScriptBind_ItemManagerExt::SetItemCondition));
     RegisterFunction("SetItemQuality", "itemId, quality", functor(*this, &CScriptBind_ItemManagerExt::SetItemQuality));
     RegisterFunction("SetItemAmount", "itemId, amount", functor(*this, &CScriptBind_ItemManagerExt::SetItemAmount));
-    RegisterFunction("SetItemOwner", "itemId, ownerId, [contextId]", functor(*this, &CScriptBind_ItemManagerExt::SetItemOwner));
+    RegisterFunction("SetItemOwner", "itemId, ownerId, [stolenFromOwnerId]", functor(*this, &CScriptBind_ItemManagerExt::SetItemOwner));
     RegisterFunction("WashItem", "itemId, [maxEffect]", functor(*this, &CScriptBind_ItemManagerExt::WashItem));
     RegisterFunction("SetItemPhaseId", "itemId, phaseId", functor(*this, &CScriptBind_ItemManagerExt::SetItemPhaseId));
     RegisterFunction("SetItemPhase", "itemId, phase", functor(*this, &CScriptBind_ItemManagerExt::SetItemPhase));
@@ -208,10 +208,10 @@ int CScriptBind_ItemManagerExt::SetItemOwner(Offsets::IFunctionHandler* pH)
     uint64_t owner = 0;
     if (!item || !GetHandleParam(pH, 2, owner))
         return pH->EndFunction();
-    uint64_t context = owner;
-    if (pH->GetParamCount() >= 3 && !GetHandleParam(pH, 3, context))
+    uint64_t stolenFromOwner = owner;
+    if (pH->GetParamCount() >= 3 && !GetHandleParam(pH, 3, stolenFromOwner))
         return pH->EndFunction();
-    item->SetOwner(WUID{ owner }, WUID{ context }, true);
+    item->SetOwner(WUID{ owner }, WUID{ stolenFromOwner }, true);
     return pH->EndFunctionAny(ScriptAnyValue(true));
 }
 

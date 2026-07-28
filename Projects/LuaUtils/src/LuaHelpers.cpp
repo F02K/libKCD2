@@ -40,9 +40,9 @@ Offsets::IScriptTable* BuildItemTable(Offsets::IScriptSystem* pSS, wh::entitymod
     t->SetValueAny("maxQuality", ScriptAnyValue(item->GetMaxQuality()));
     t->SetValueAny("isEquipped", ScriptAnyValue((item->m_flags & 1) != 0));
 
-    S_ItemOwnerHandle owner{};
+    wh::framework::WUID owner{};
     item->GetOwnerHandle(owner);
-    t->SetValueAny("owner", HandleValue(owner.owner.m_value));
+    t->SetValueAny("owner", HandleValue(owner.m_value));
 
     if (item->m_pLinkedEntity)
         t->SetValueAny("entity", HandleValue(item->m_pLinkedEntity->GetId()));

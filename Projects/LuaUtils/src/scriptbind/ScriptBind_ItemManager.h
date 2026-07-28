@@ -14,15 +14,15 @@
 //   ItemManager.GetItemMaxQuality(itemId)  -> int | nil
 //   ItemManager.GetItemPrices(itemId)      -> { unit, stack, newUnit, newStack } | nil
 //   -- setters (return true on success, nil otherwise)
-//   ItemManager.SetItemHealth(itemId, health01)
-//   ItemManager.SetItemCondition(itemId, condition01)
+//   ItemManager.SetItemHealth(itemId, health)
+//   ItemManager.SetItemCondition(itemId, condition)
 //   ItemManager.SetItemQuality(itemId, quality)
 //   ItemManager.SetItemAmount(itemId, amount)        -- 0 deletes the stack
-//   ItemManager.SetItemOwner(itemId, ownerId[, contextId])
+//   ItemManager.SetItemOwner(itemId, ownerId[, stolenFromOwnerId])
 //   ItemManager.WashItem(itemId[, maxEffect])
 //   ItemManager.SetItemPhaseId(itemId, phaseId)
-//   ItemManager.SetItemPhase(itemId, phase01)
-//   ItemManager.AdvanceItemPhase(itemId, amount01)
+//   ItemManager.SetItemPhase(itemId, phase)
+//   ItemManager.AdvanceItemPhase(itemId, amount)
 //   ItemManager.MoveItem(itemId, dstInventoryId[, count]) -> movedItemId | nil  (count 0/absent = all)
 
 #pragma once

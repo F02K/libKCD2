@@ -103,8 +103,8 @@ int CScriptBind_EquipmentManager::GetHandSlots(Offsets::IFunctionHandler* pH)
     if (!t)
         return pH->EndFunction();
     for (int i = 0; i < 8; ++i) {
-        if (em->m_handSlots[i])
-            t->SetAtAny(i + 1, HandleValue(em->m_handSlots[i]->m_wuid.m_value));
+        if (em->m_weaponEquipSlots[i])
+            t->SetAtAny(i + 1, HandleValue(em->m_weaponEquipSlots[i]->m_wuid.m_value));
     }
     int n = pH->EndFunctionAny(ScriptAnyValue(t));
     t->Release();

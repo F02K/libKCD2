@@ -21,18 +21,18 @@ I_ItemRuntimeData* C_Item::GetOrCreateRuntimeData()
     return fn(this);
 }
 
-void C_Item::SetHealth(float health01, void* outNotifyCtx)
+void C_Item::SetHealth(float health, void* outNotifyCtx)
 {
     using Fn = void (__fastcall*)(C_Item*, float, void*);
     static REL::Relocation<Fn> fn{ REL::ID(27020) };  // 0x180470078
-    fn(this, health01, outNotifyCtx);
+    fn(this, health, outNotifyCtx);
 }
 
-void C_Item::SetItemHealth(float health01)
+void C_Item::SetItemHealth(float health)
 {
     using Fn = void (__fastcall*)(C_Item*, float);
     static REL::Relocation<Fn> fn{ REL::ID(48260) };  // 0x1808D61B8
-    fn(this, health01);
+    fn(this, health);
 }
 
 float C_Item::GetCondition() const
@@ -98,18 +98,18 @@ void C_Item::SetItemPhaseId(uint32_t phaseId)
     fn(this, phaseId);
 }
 
-void C_Item::SetItemPhase(float phase01)
+void C_Item::SetItemPhase(float phase)
 {
     using Fn = void (__fastcall*)(C_Item*, float);
     static REL::Relocation<Fn> fn{ REL::ID(119762) };  // 0x181505914
-    fn(this, phase01);
+    fn(this, phase);
 }
 
-void C_Item::AdvanceItemPhase(float amount01)
+void C_Item::AdvanceItemPhase(float amount)
 {
     using Fn = void (__fastcall*)(C_Item*, float);
     static REL::Relocation<Fn> fn{ REL::ID(350000) };  // 0x182A689E4
-    fn(this, amount01);
+    fn(this, amount);
 }
 
 void C_Item::SetAmount(int32_t amount)
@@ -126,18 +126,18 @@ void C_Item::NotifyChanged(uint32_t flagMask)
     fn(this, flagMask);
 }
 
-void C_Item::GetOwnerHandle(S_ItemOwnerHandle& out) const
+void C_Item::GetOwnerHandle(wh::framework::WUID& out) const
 {
-    using Fn = void (__fastcall*)(const C_Item*, S_ItemOwnerHandle*);
+    using Fn = wh::framework::WUID* (__fastcall*)(const C_Item*, wh::framework::WUID*);
     static REL::Relocation<Fn> fn{ REL::ID(150937) };  // 0x1819BD1C4
     fn(this, &out);
 }
 
-bool C_Item::SetOwner(const wh::framework::WUID& owner, const wh::framework::WUID& context, bool indexFlag)
+bool C_Item::SetOwner(const wh::framework::WUID& owner, const wh::framework::WUID& stolenFromOwner, bool indexFlag)
 {
     using Fn = bool (__fastcall*)(C_Item*, const wh::framework::WUID*, const wh::framework::WUID*, uint8_t);
     static REL::Relocation<Fn> fn{ REL::ID(195376) };  // 0x181F0F730
-    return fn(this, &owner, &context, indexFlag);
+    return fn(this, &owner, &stolenFromOwner, indexFlag);
 }
 
 }  // namespace wh::entitymodule

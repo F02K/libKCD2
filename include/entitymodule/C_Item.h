@@ -25,12 +25,6 @@ class  S_ItemClass;
 class  I_ItemRuntimeData;
 class  C_InventoryBase;
 
-// The 16-byte owner handle stored at C_Item+0x68/+0x70 (reader sub_1819BD1C4 fills both halves).
-struct S_ItemOwnerHandle {
-    wh::framework::WUID owner;    // +0x00  the owning soul/entity WUID
-    wh::framework::WUID context;  // +0x08  possessor/context WUID (empty-sentinel when == owner)
-};
-
 class C_Item
     : public wh::framework::I_BindableObject               // +0x00  (primary vtable)
     , public ::EntityEventListenerWithCleanup              // +0x08  (vtable + event vector, 0x20)
@@ -47,11 +41,11 @@ public:
     // The health-write core: change-detect vs +0x54, pre-hooks 0x180469988/0x180470138, clamped
     // write, classData vf[15] gate or |h-1|<1e-5, post-update 0x1804694C0 + runtime-data refresh,
     // then broadcast 0x1804663DC (or *(outCtx+8)=1 when outCtx given).  0x180470078
-    void SetHealth(float health01, void* outNotifyCtx = nullptr);
+    void SetHealth(float health, void* outNotifyCtx = nullptr);
     // RTTR "SetItemHealth" ("Sets item health... clamped 0.0-1.0"; BT SetItemProperty prop 3):
     // for Equippable-type items additionally resets the runtime-data condition (+0xA4) when
     // raising above the base health, then runs SetHealth.  0x1808D61B8
-    void SetItemHealth(float health01);
+    void SetItemHealth(float health);
     // RTTR "Condition": runtime-data condition (+0xA4) for Equippable-type items, else raw
     // m_health (+0x54).  0x18096F7D4
     float GetCondition() const;
@@ -67,8 +61,8 @@ public:
     // runtime-data wash virtual (derived vtable +0xC8).  0x182A6B758
     void WashItem(float maxEffect = 1.0f);
     void SetItemPhaseId(uint32_t phaseId);  // RTTR "SetItemPhaseId" / BT prop 1  0x182A6B09C
-    void SetItemPhase(float phase01);       // BT prop 0 (set variant)            0x181505914
-    void AdvanceItemPhase(float amount01);  // RTTR "AdvanceItemPhase" / BT prop 0 (advance variant, clamp 0-1)  0x182A689E4
+    void SetItemPhase(float phase);       // BT prop 0 (set variant)            0x181505914
+    void AdvanceItemPhase(float amount);  // RTTR "AdvanceItemPhase" / BT prop 0 (advance variant, clamp 0-1)  0x182A689E4
     // RAW amount write (m_amount only -- fires NO inventory listeners; the sanctioned in-inventory
     // change is C_InventoryBase::ChangeItemAmount).  0x180468B34
     void SetAmount(int32_t amount);
@@ -76,13 +70,14 @@ public:
     // gate 0x18046646C passes, runs 0x1804663DC -> listener notify + classData vf[15]
     // (classData, item, mask, (m_flags & mask)!=0).  NOT a flag mutator.  0x18046643C
     void NotifyChanged(uint32_t flagMask);
-    // Reads the 16-byte owner handle (both halves, with fallbacks).  0x1819BD1C4
-    void GetOwnerHandle(S_ItemOwnerHandle& out) const;
-    // The sanctioned owner write: guard 0x180469828 (early-out, disqualifier [U]); writes +0x68 =
-    // owner, +0x70 = context (empty-sentinel qword_1853257E8 when context == owner), +0x78 =
-    // ownership ctx from *(*(S_GameContext+0x130)+0x88)+0x48; then upserts the C_ItemManager
-    // owner index (+0x18) via 0x1804CA7EC(mgr+0x18, this, indexFlag).  0x181F0F730
-    bool SetOwner(const wh::framework::WUID& owner, const wh::framework::WUID& context, bool indexFlag);
+    // Writes one effective-owner WUID: m_owner while actively stolen, otherwise the current
+    // inventory owner's WUID (with the special-item fallback).  0x1819BD1C4
+    void GetOwnerHandle(wh::framework::WUID& out) const;
+    // Preserves an active stolen mark; otherwise records owner, canonicalizes an equal
+    // stolenFromOwner to InvalidWUID, stamps calendar world time in milliseconds, and updates the
+    // C_ItemManager owner index. The second WUID is the source/stolen-from inventory owner, not the
+    // current destination owner.  0x181F0F730
+    bool SetOwner(const wh::framework::WUID& owner, const wh::framework::WUID& stolenFromOwner, bool indexFlag);
 
     uint8_t  m_state;                                  // +0x28  init 5 (state/enum; no reader isolated)
     uint8_t  _pad29[7];                                // +0x29
@@ -100,11 +95,12 @@ public:
                                                        //        SetItemProperty prop-2 notify mask (meaning unresolved)
     float    m_condition;                              // +0x64  wear/condition; initial-health path 0x180469348
                                                        //        writes it alongside runtime-data condition (tentative)
-    wh::framework::WUID m_owner;                       // +0x68  owner WUID (SetOwner 0x181F0F730 writes)  VERIFIED
-    uint64_t m_ownerExtra;                             // +0x70  owner-handle 2nd half: possessor/context WUID,
-                                                       //        empty-sentinel qword_1853257E8 when == owner  VERIFIED
-    void*    m_pOwnerContext;                          // +0x78  ownership context: SetOwner stores
-                                                       //        *(*(S_GameContext+0x130)+0x88)+0x48 (pointee type UNVERIFIED)
+    wh::framework::WUID m_owner;                       // +0x68  recorded owner for the ownership mark; returned
+                                                       //        as effective owner while actively stolen  VERIFIED
+    wh::framework::WUID m_stolenFromOwner;             // +0x70  source/stolen-from owner override; InvalidWUID
+                                                       //        means use m_owner  VERIFIED
+    int64_t  m_ownerSetWorldTime;                      // +0x78  ownership-mark creation world time in milliseconds;
+                                                       //        drives owner-mark fading  VERIFIED
     int64_t  m_expiry;                                 // +0x80  TTL sentinel init INT64_MAX  VERIFIED
     Offsets::IEntity* m_pLinkedEntity;                 // +0x88  spawned entity (OnEntityEvent)  VERIFIED
     C_InventoryBase* m_pInventory;                     // +0x90  CURRENT container: MoveItem core 0x1808D534C sets

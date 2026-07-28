@@ -134,6 +134,8 @@
 
 // ---- Tranche 2: item / inventory ----
 #include "entitymodule/E_ItemType.h"
+#include "entitymodule/E_WeaponEquipSlot.h"
+#include "entitymodule/S_EquipmentSlotIdWrapper.h"
 #include "entitymodule/S_ItemClass.h"
 #include "entitymodule/S_PickableItemClass.h"
 #include "entitymodule/S_PlayerItemClass.h"
@@ -967,6 +969,9 @@
 #include "dialogmodule/E_DialogCameraType.h"
 #include "playermodule/E_MinigameType.h"
 #include "playermodule/E_OutfitId.h"
+#include "playermodule/E_QAM_WeaponSlot.h"
+#include "playermodule/E_QAM_FoodSlot.h"
+#include "playermodule/C_QAMSlot.h"
 #include "rpgmodule/E_CompanionEvent.h"
 // interfaces
 #include "guimodule/I_Cutscene.h"

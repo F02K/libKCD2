@@ -8,6 +8,7 @@ class C_Item;
 }
 
 namespace wh::playermodule {
+class C_OutfitManager;
 class C_PlayerInventorySoul;
 }
 
@@ -75,7 +76,7 @@ public:
     virtual void InventorySoulUnk46() = 0;                                    // [46] sub_18154BFB8 [U signature]
     virtual void InventorySoulUnk47() = 0;                                    // [47] sub_1803A36AC [U signature]
     virtual void InventorySoulUnk48() = 0;                                    // [48] sub_181FE0BF0 [U signature]
-    virtual void InventorySoulUnk49() = 0;                                    // [49] sub_1806875A4 [U signature]
+    virtual playermodule::C_OutfitManager* GetOutfitManager() = 0;             // [49] sub_1806875A4 -> player soul's embedded manager, else null
     virtual playermodule::C_PlayerInventorySoul* GetPlayerInventorySoul() = 0; // [50] sub_181A74CD0 -> +0x110
     virtual std::uint32_t InventorySoulUnk51(const entitymodule::C_Item* item) = 0; // [51] sub_1808F769C
 };
