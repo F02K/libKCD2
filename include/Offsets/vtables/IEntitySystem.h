@@ -22,7 +22,22 @@
 namespace Offsets {
 
 struct IEntity;
+struct IEntityIt;
 typedef uint64_t EntityGUID;
+
+// Exact shipping IEntitySystemSink slot order. InitEntity dispatches OnSpawn
+// through +0x10, RemoveEntity dispatches OnRemove through +0x18, and the actor
+// system's tertiary sink vtable (0x1840482B8) pins the complete eight-slot shape.
+struct IEntitySystemSink {
+    virtual ~IEntitySystemSink() = default;                                  // [0]
+    virtual bool OnBeforeSpawn(void* params) = 0;                            // [1] +0x08
+    virtual void OnSpawn(IEntity* entity, void* params) = 0;                 // [2] +0x10 VERIFIED
+    virtual bool OnRemove(IEntity* entity) = 0;                              // [3] +0x18 VERIFIED
+    virtual void OnReused(IEntity* entity, void* params) = 0;                // [4] +0x20
+    virtual void _vf5(IEntity* entity, void* event) = 0;                     // [5] +0x28 (new KCD2 callback; semantic name unresolved)
+    virtual void OnEvent(IEntity* entity, void* event) = 0;                  // [6] +0x30
+    virtual void GetMemoryUsage(void* sizer) const = 0;                      // [7] +0x38
+};
 
 struct IEntitySystem {
     virtual void Dtor(char flags) = 0;  // [0] 0x18380959C  scalar deleting dtor
@@ -47,15 +62,15 @@ struct IEntitySystem {
     virtual bool RemoveEntity(uint32_t id, bool forceNow) = 0;  // [19] 0x18047EC24  "CEntitySystem::RemoveEntity" (EntitySystem.cpp:1112) [KCD1 18]
     virtual void UpdateDeletedEntities() = 0;  // [20] 0x1820FA710  "EntitySystem::UpdateDeletedEntities" worker [KCD1 8]
     virtual uint32_t GetNumEntities() = 0;  // [21] 0x180AE310C  salt-list counter (disasm-proven) [KCD1 19]
-    virtual void* GetEntityIterator() = 0;  // [22] 0x180AE2C34  allocates CEntityItMap [KCD1 20]
+    virtual IEntityIt* GetEntityIterator() = 0;  // [22] 0x180AE2C34  CEntityItMap, exact runtime slots in IEntityIt.h
     virtual void SendEventToAll(void* event) = 0;  // [23] 0x180D1E26C  per-slot event dispatch [KCD1 21]
     virtual void _vf24() = 0;  // [24]
     virtual int QueryProximity(void* query) = 0;  // [25] 0x180C887A4  AABB partition-grid query [LIKELY; KCD1 24]
     virtual void _vf26() = 0;  // [26]
     virtual void _vf27() = 0;  // [27]
     virtual void _vf28() = 0;  // [28]
-    virtual void AddSink(void* sink, uint32_t subscriptions) = 0;  // [29] 0x180DC006C  5 sink lists @+0x08+0x30*i, SRW-locked [KCD1 sinks]
-    virtual void RemoveSink(void* sink) = 0;  // [30] 0x180DA68BC  removes from all sink lists [KCD1 sinks]
+    virtual void AddSink(IEntitySystemSink* sink, uint32_t subscriptions, uint64_t onEventSubscriptions) = 0;  // [29] 0x180DC006C  5 sink lists @+0x08+0x30*i, SRW-locked; r9 is event mask VERIFIED
+    virtual void RemoveSink(IEntitySystemSink* sink) = 0;  // [30] 0x180DA68BC  removes from all sink lists [KCD1 sinks]
     virtual void PauseTimers(bool bPause, bool bResume) = 0;  // [31] 0x180A55964  +0x600230; shifts queued timers on unpause [LIKELY; KCD1 29]
     virtual bool IsIDUsed(uint32_t id) = 0;  // [32] 0x18380C574  locked salt-word match [LIKELY; KCD1 30]
     virtual void GetMemoryStatistics(void* pSizer) = 0;  // [33] 0x18380BF78  ICrySizer sections "Entities"/"Partition Grid"/... [KCD1 31]

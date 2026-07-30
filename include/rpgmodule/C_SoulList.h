@@ -55,6 +55,9 @@ public:
     // ---- engine-function forwarders (src/rpgmodule/C_Soul.cpp) ----
     static C_SoulList* GetInstance();                          // C_RPGModule::GetInstance()->m_pSoulList
     C_Soul* LookupByWUID(const wh::framework::WUID& wuid);     // sub_181F985D0(&m_soulTable, &wuid)
+    // Fresh-Soul initialization sequence used by sub_180AD7EE4:
+    // C_Soul::SetSharedSoulGuid followed by sub_1803F4578.
+    bool ApplySharedSoul(C_Soul& soul, const CryGUID& sharedSoulGuid);
 
     wh::shared::C_Signal<> m_onSoulAdded;    // +0x18  (purpose inferred from context; dtor sub_182D2532C)
     wh::shared::C_Signal<> m_onSoulRemoved;  // +0x28  (purpose inferred; dtor sub_182D25384)

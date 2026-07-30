@@ -1,4 +1,5 @@
 #pragma once
+#include <cstddef>
 #include <cstdint>
 #include <vector>
 #include "C_ItemHolder.h"
@@ -48,6 +49,13 @@ public:
     // vetoes.  unkOwnerFlag [U role]: gates the merge search (0x1808D56D0); the keep-owner move
     // path passes 1, the change-owner path 0.  0x1808D534C
     C_Item* MoveItemIn(C_Item* item, uint32_t count, bool unkOwnerFlag);
+    // Complete native creation path used by C_ScriptBindInventory::CreateItem,
+    // without invoking the script binder: build parameters 0x1804533E4,
+    // inventory insert 0x180465FC0, destroy parameters 0x180453BEC.
+    C_Item* CreateItem(
+        const CryGUID& classId,
+        float health,
+        uint32_t amount);
 
     std::vector<C_Item*>       m_items;        // +0x08  held items  VERIFIED layout
     std::vector<C_ItemHolder*> m_items2;       // +0x20  secondary list (role/elem type UNVERIFIED)

@@ -3,8 +3,6 @@
 #include <Windows.h>
 
 #include <cstring>
-#include <fstream>
-#include <iterator>
 #include <string>
 #include <string_view>
 
@@ -24,6 +22,38 @@ namespace REL
 {
 	namespace
 	{
+		bool read_file(const std::wstring& a_path, std::string& a_contents)
+		{
+			const auto file = ::CreateFileW(
+				a_path.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING,
+				FILE_ATTRIBUTE_NORMAL, nullptr);
+			if (file == INVALID_HANDLE_VALUE) {
+				return false;
+			}
+
+			LARGE_INTEGER size{};
+			if (!::GetFileSizeEx(file, &size) || size.QuadPart < 0 || size.QuadPart > MAXDWORD) {
+				::CloseHandle(file);
+				return false;
+			}
+
+			a_contents.resize(static_cast<std::size_t>(size.QuadPart));
+			auto* cursor = a_contents.data();
+			auto remaining = static_cast<DWORD>(a_contents.size());
+			bool ok = true;
+			while (remaining > 0) {
+				DWORD read = 0;
+				if (!::ReadFile(file, cursor, remaining, &read, nullptr) || read == 0) {
+					ok = false;
+					break;
+				}
+				cursor += read;
+				remaining -= read;
+			}
+			::CloseHandle(file);
+			return ok;
+		}
+
 		// Minimal, dependency-free scraping for the fixed Warhorse-generated
 		// whdlversions.json layout. Not a general JSON parser: find an object
 		// anchor (e.g. "\"Assembly\""), then the first `key` after it, then that
@@ -155,19 +185,14 @@ namespace REL
 	{
 		if (!_releaseQueried) {
 			_releaseQueried = true;
-			std::ifstream f((_gameRoot + L"\\system.cfg").c_str());
-			std::string   line;
-			while (std::getline(f, line)) {
-				const auto key = line.find("wh_sys_version");   // KCD2: wh_sys_version = "1.5.6"
-				if (key == std::string::npos) {
-					continue;
-				}
-				const auto q1 = line.find('"', key);
-				const auto q2 = q1 == std::string::npos ? std::string::npos : line.find('"', q1 + 1);
+			std::string config;
+			if (read_file(_gameRoot + L"\\system.cfg", config)) {
+				const auto key = config.find("wh_sys_version");  // KCD2: wh_sys_version = "1.5.6"
+				const auto q1 = key == std::string::npos ? std::string::npos : config.find('"', key);
+				const auto q2 = q1 == std::string::npos ? std::string::npos : config.find('"', q1 + 1);
 				if (q1 != std::string::npos && q2 != std::string::npos) {
-					_release = line.substr(q1 + 1, q2 - q1 - 1);
+					_release = config.substr(q1 + 1, q2 - q1 - 1);
 				}
-				break;
 			}
 		}
 		return _release;
@@ -184,9 +209,8 @@ namespace REL
 			// We key the address library on <Branch.Name>-<Assembly.Id>
 			// (e.g. "release_1_5-15693") -- Assembly.Id uniquely identifies one
 			// shipped binary build; Branch.Name makes the .bin filename readable.
-			std::ifstream f((_gameRoot + L"\\whdlversions.json").c_str(), std::ios::binary);
-			const std::string j((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
-			if (!j.empty()) {
+			std::string j;
+			if (read_file(_gameRoot + L"\\whdlversions.json", j) && !j.empty()) {
 				const std::string branch = json_string_after(j, "\"Branch\"", "\"Name\"");
 				const std::string id     = json_number_after(j, "\"Assembly\"", "\"Id\"");
 				if (!branch.empty() && !id.empty()) {

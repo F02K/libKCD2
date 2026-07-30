@@ -31,6 +31,12 @@ struct IEntityArchetype;
 class CEntity : public Offsets::IEntity
 {
 public:
+    // Native physics-proxy control used by CScriptBind_Entity::EnablePhysics:
+    // resolve proxy type 1 through CEntity's proxy map, then dispatch the
+    // verified physical-proxy vtable slot 24. Returns false only when enabling
+    // was requested but no physics proxy exists.
+    bool EnablePhysics(bool enabled);
+
     // +0x00 : vptr (CEntity::`vftable') supplied by Offsets::IEntity
 
     // Packed internal state bitfield (active / bounds-valid / hidden / invisible /

@@ -85,6 +85,10 @@ public:
     // m_pSoul -> C_Soul::m_inventorySoul (+0x198) -> I_InventorySoul::GetInventory [0]);
     // null if the soul is absent.  Used by the alchemy stocking/reset paths.
     C_Inventory* GetInventory();
+    // Typed multiplayer locomotion wrapper. Constructs the verified KCD2
+    // CMovementRequest prefix internally and dispatches
+    // IMovementController::RequestMovement [1].
+    bool RequestLocomotion(const Vec3* moveTarget, float desiredSpeed);
 
     ::CStateMachine<C_Actor> m_stateMachine;           // +0x58   (0x48) transition signal + state ptr + event ring FIFO
 

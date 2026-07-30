@@ -36,4 +36,35 @@ C_Item* C_InventoryBase::MoveItemIn(C_Item* item, uint32_t count, bool unkOwnerF
     return fn(this, item, count, unkOwnerFlag);
 }
 
+C_Item* C_InventoryBase::CreateItem(
+    const CryGUID& classId,
+    float health,
+    uint32_t amount)
+{
+    // S_ItemInitParams is 0xF8 bytes (all observed inventory paths step the
+    // records by 0xF8). Keep it opaque here because its internal fields are
+    // owned by the engine builder/destructor pair.
+    struct alignas(16) S_ItemInitParamsOpaque {
+        std::byte data[0xF8];
+    } params{};
+    using Build = void* (__fastcall*)(
+        S_ItemInitParamsOpaque*,
+        const CryGUID*,
+        uint32_t,
+        float);
+    using Insert = C_Item* (__fastcall*)(
+        C_InventoryBase*,
+        S_ItemInitParamsOpaque*,
+        uint32_t,
+        uint8_t);
+    using Destroy = void (__fastcall*)(S_ItemInitParamsOpaque*);
+    static REL::Relocation<Build> build{ REL::ID(26335) };    // Steam RVA 0x4533E4
+    static REL::Relocation<Insert> insert{ REL::ID(26689) };  // Steam RVA 0x465FC0
+    static REL::Relocation<Destroy> destroy{ REL::ID(26348) };// Steam RVA 0x453BEC
+    build(&params, &classId, amount, health);
+    auto* result = insert(this, &params, 4, 0);
+    destroy(&params);
+    return result;
+}
+
 }  // namespace wh::entitymodule

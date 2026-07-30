@@ -119,6 +119,13 @@ void C_Item::SetAmount(int32_t amount)
     fn(this, amount);
 }
 
+void C_Item::SetInstanceGuid(const CryGUID& instanceGuid)
+{
+    using Fn = void (__fastcall*)(C_Item*, const CryGUID*);
+    static REL::Relocation<Fn> fn{ REL::ID(26742) };  // Steam RVA 0x467A6C
+    fn(this, &instanceGuid);
+}
+
 void C_Item::NotifyChanged(uint32_t flagMask)
 {
     using Fn = void (__fastcall*)(C_Item*, uint32_t);

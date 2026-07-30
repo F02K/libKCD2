@@ -6,6 +6,9 @@
 #include "Offsets/vtables/IEntity.h"
 #include "crysystem/SSystemGlobalEnvironment.h"
 
+#include <algorithm>
+#include <cmath>
+
 // C_Soul / C_SoulList engine-function forwarders. Thin wrappers around verified
 // KCD2 1.5.6 RVAs (mirrors C_FactionManager.cpp).
 
@@ -61,6 +64,163 @@ float C_Soul::GetSkillFraction(uint32_t skillId, bool visitorFlag) const
     using Fn = float (__fastcall*)(const C_Soul*, uint32_t, char);
     static REL::Relocation<Fn> fn{ REL::ID(26997) };
     return fn(this, skillId, visitorFlag);
+}
+
+uint32_t C_Soul::GetStatLevel(uint32_t statId) const
+{
+    return statId < 10 ? m_rpgStats.m_liveBlock.m_stats[statId].value : 0;
+}
+
+uint32_t C_Soul::GetSkillLevel(uint32_t skillId) const
+{
+    return skillId < 35 ? m_rpgStats.m_liveBlock.m_skills[skillId].value : 0;
+}
+
+float C_Soul::GetStatProgress(uint32_t statId) const
+{
+    if (statId >= 10)
+        return 0.0f;
+    using Fn = float (__fastcall*)(const C_Soul*, uint32_t);
+    static REL::Relocation<Fn> fn{ REL::ID(26814) };  // Steam RVA 0x469BF0
+    return fn(this, statId);
+}
+
+float C_Soul::GetSkillProgress(uint32_t skillId) const
+{
+    if (skillId >= 35)
+        return 0.0f;
+    using Fn = float (__fastcall*)(const S_StatCell*);
+    static REL::Relocation<Fn> fn{ REL::ID(106156) };  // Steam RVA 0x12EFD30
+    return fn(&m_rpgStats.m_liveBlock.m_skills[skillId]);
+}
+
+namespace {
+
+using XpThresholdFn = uint32_t* (__fastcall*)(
+    const void*, uint32_t*, uint32_t, uint32_t);
+
+uint32_t xp_threshold(bool skill, uint32_t level, uint32_t id)
+{
+    using ConstantsFn = const void* (__fastcall*)();
+    static REL::Relocation<ConstantsFn> constants{ REL::ID(35176) };  // Steam RVA 0x649D30
+    static REL::Relocation<XpThresholdFn> stat{ REL::ID(26816) };     // Steam RVA 0x469C64
+    static REL::Relocation<XpThresholdFn> skill_fn{ REL::ID(85622) }; // Steam RVA 0xFA30DC
+    uint32_t result{};
+    if (skill)
+        skill_fn(constants(), &result, level, id);
+    else
+        stat(constants(), &result, level, id);
+    return result;
+}
+
+bool dispatch_xp(C_Soul* soul, bool skill, uint32_t id, uint32_t amount)
+{
+    using ResolveEvent = void (__fastcall*)(
+        void*, void**, const wh::framework::WUID*);
+    using ConstructCause = void* (__fastcall*)(
+        void*, void*, uint64_t, uint32_t, const uint32_t*, bool, uint32_t);
+    static REL::Relocation<ResolveEvent> resolve{ REL::ID(54065) };       // Steam RVA 0x9DC2EC
+    static REL::Relocation<ConstructCause> stat_cause{ REL::ID(66740) }; // Steam RVA 0xC671B0
+    static REL::Relocation<ConstructCause> skill_cause{ REL::ID(66741) };// Steam RVA 0xC67268
+    static REL::Relocation<std::uintptr_t> rpg_module{ REL::ID(2349) };  // Steam RVA 0x53322A0
+
+    auto* module = *reinterpret_cast<void**>(rpg_module.address());
+    if (!module)
+        return false;
+    auto* manager = *reinterpret_cast<void**>(
+        reinterpret_cast<std::byte*>(module) + 0xB0);
+    if (!manager)
+        return false;
+    auto** vtable = *reinterpret_cast<void***>(manager);
+    using Allocate = void* (__fastcall*)(void*);
+    using Dispatch = void (__fastcall*)(void*, void*);
+    auto allocate = reinterpret_cast<Allocate>(vtable[1]);
+    auto dispatch = reinterpret_cast<Dispatch>(vtable[0]);
+
+    (void)allocate(manager);
+    void* event{};
+    resolve(manager, &event, &soul->m_selfWuid);
+    auto* storage = allocate(manager);
+    if (!storage || !event)
+        return false;
+    const auto wuid = soul->m_selfWuid.m_value;
+    auto* cause = skill
+        ? skill_cause(storage, event, wuid, id, &amount, false, 0U)
+        : stat_cause(storage, event, wuid, id, &amount, false, 6U);
+    if (!cause)
+        return false;
+    dispatch(manager, event);
+    return true;
+}
+
+bool set_absolute(
+    C_Soul* soul,
+    bool skill,
+    uint32_t id,
+    uint32_t level,
+    float progress)
+{
+    if ((!skill && id >= 10) || (skill && id >= 35)
+        || !std::isfinite(progress) || progress < 0.0f || progress > 1.0f)
+        return false;
+
+    uint64_t total{};
+    for (uint32_t current = 0; current < level; ++current)
+        total += xp_threshold(skill, current, id);
+    total += static_cast<uint64_t>(std::llround(
+        static_cast<double>(xp_threshold(skill, level, id))
+        * std::clamp(progress, 0.0f, 1.0f)));
+    if (total > UINT32_MAX)
+        return false;
+
+    auto& live = skill
+        ? soul->m_rpgStats.m_liveBlock.m_skills[id]
+        : soul->m_rpgStats.m_liveBlock.m_stats[id];
+    auto& base = skill
+        ? soul->m_rpgStats.m_baseBlock.m_skills[id]
+        : soul->m_rpgStats.m_baseBlock.m_stats[id];
+    live = {};
+    base = {};
+    if (!dispatch_xp(soul, skill, id, static_cast<uint32_t>(total)))
+        return false;
+    base = live;
+    return live.value == level;
+}
+
+}  // namespace
+
+bool C_Soul::SetStatAbsolute(
+    uint32_t statId, uint32_t level, float progress)
+{
+    return set_absolute(this, false, statId, level, progress);
+}
+
+bool C_Soul::SetSkillAbsolute(
+    uint32_t skillId, uint32_t level, float progress)
+{
+    return set_absolute(this, true, skillId, level, progress);
+}
+
+bool C_Soul::SetSharedSoulGuid(const CryGUID& guid)
+{
+    using Fn = void (__fastcall*)(C_Soul*, const CryGUID*);
+    static REL::Relocation<Fn> fn{ REL::ID(24744) };  // Steam RVA 0x3F124C
+    fn(this, &guid);
+    return m_sharedSoulGuid == guid;
+}
+
+bool C_SoulList::ApplySharedSoul(
+    C_Soul& soul, const CryGUID& sharedSoulGuid)
+{
+    if (!soul.SetSharedSoulGuid(sharedSoulGuid))
+        return false;
+
+    // The native constructor invokes this immediately after SetSharedSoulGuid
+    // to load the shared record into the freshly allocated Soul.
+    using Fn = bool (__fastcall*)(
+        C_SoulList*, C_Soul*, const CryGUID*, bool);
+    static REL::Relocation<Fn> fn{ REL::ID(24851) };  // Steam RVA 0x3F4578
+    return fn(this, &soul, &sharedSoulGuid, false);
 }
 
 float C_Soul::GetPerkStatModifier(E_PerkStat statId, float seed, void* ctx) const

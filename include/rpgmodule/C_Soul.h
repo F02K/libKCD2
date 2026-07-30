@@ -73,6 +73,17 @@ public:
     // rides into the visitor context; the game's tolerance path leaves it UNINITIALIZED
     // (proven ignored on the skill path) -- pass false.
     float GetSkillFraction(uint32_t skillId, bool visitorFlag = false) const;
+    uint32_t GetStatLevel(uint32_t statId) const;
+    uint32_t GetSkillLevel(uint32_t skillId) const;
+    float GetStatProgress(uint32_t statId) const;
+    float GetSkillProgress(uint32_t skillId) const;
+    bool SetStatAbsolute(uint32_t statId, uint32_t level, float progress);
+    bool SetSkillAbsolute(uint32_t skillId, uint32_t level, float progress);
+    // sub_1803F124C: updates the shared-Soul registry membership at
+    // C_Soul+0x300. The loader itself lives on C_SoulList; callers creating a
+    // fresh Soul must use C_SoulList::ApplySharedSoul so the referenced record
+    // is materialized as well as registered.
+    bool SetSharedSoulGuid(const CryGUID& guid);
     // vtable slot +0x310 impl sub_180649F1C: folds every active m_sortedModifierLists[2] node
     // matching statId onto seed, then the id-specific clamp (40 unfloored, 83 >= -1,
     // {7,8,9,23,24,26,36,53} [0,1], everything else >= 0).  The alchemy grader
@@ -102,7 +113,7 @@ public:
     void*    m_pOwned2E8;                      // +0x2E8  owned ptr, POD pointee (dtor sub_1809662EC just frees via sub_181AB5160); pointee class unresolved
     C_SkillTeacherSoulComponent* m_pSkillTeacher; // +0x2F0  owned 0xF0 obj; ctor sub_180A1A4A8 stores C_SkillTeacherSoulComponent vtable; dtor sub_1809662FC deletes via vslot+0x10
     void*    m_pOwned2F8;                      // +0x2F8  owned ptr to 8-byte soul-listener holding C_Soul* (ctor sub_1809649C8 when archetype-desc(+0xCB8)[+0x18]==1; dtor sub_180964298 unregisters + frees)
-    uint64_t m_unk300[2];                      // +0x300  OWORD zero-init
+    CryGUID  m_sharedSoulGuid;                 // +0x300  "SharedSoulGuid"; registered by sub_1803F124C
     uint32_t m_unk310;                         // +0x310
     uint32_t _pad314;                          // +0x314
     uint64_t m_lock318;                        // +0x318  lock/handle (unknown_libname_5 init; dtor sub_180966374)

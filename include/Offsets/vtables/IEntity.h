@@ -52,7 +52,7 @@ struct IEntity {
     virtual void _vf28() = 0;                                        // [28]  0xE0  reads ptr@0x98
     virtual void _vf29() = 0;                                        // [29]  0xE8  reads ptr@0x98
     virtual void GetWorldTM(Matrix34& out) const = 0;                // [30]  0xF0  618 bytes (fills Matrix34)                   tentative
-    virtual void SetWorldTM(const Matrix34& tm, int flags) = 0;      // [31]  0xF8  204 bytes                                    tentative
+    virtual void SetWorldTM(const Matrix34& tm, int flags) = 0;      // [31]  0xF8  0x1807F0DF4; rcx=this, rdx=Matrix34, r8d=flags VERIFIED
     virtual Matrix34* GetWorldTMPtr() = 0;                           // [32]  0x100 lea rax,[this+0x58]                          VERIFIED worldTM@0x58
     virtual void _vf33() = 0;                                        // [33]  0x108
     virtual void GetWorldBounds(AABB& bbox) const = 0;               // [34]  0x110  VERIFIED via CFlowNode_EntityGetBounds::ProcessEvent (sub_18361B6E0, "World" branch, offset 272)
@@ -73,8 +73,8 @@ struct IEntity {
     virtual void GetForwardDir(Vec3& out) const = 0;                 // [49]  0x188  test bit0x400000@0x08 then reads fwd@0x88     tentative
     virtual void _vf50() = 0;                                        // [50]  0x190
     virtual void _vf51() = 0;                                        // [51]  0x198  reads dword@0x08 (mask 0x3C000)
-    virtual void _vf52() = 0;                                        // [52]  0x1A0
-    virtual bool _vf53() const = 0;                                  // [53]  0x1A8  return *(uint8*)(this+0x08) & 1              bitfield@+0x08 bit0
+    virtual void Activate(bool active) = 0;                          // [52]  0x1A0 VERIFIED by engine call sites and offline VTable audit
+    virtual bool IsActive() const = 0;                               // [53]  0x1A8 return *(uint8*)(this+0x08) & 1               VERIFIED
     virtual uint32_t _vf54() const = 0;                              // [54]  0x1B0  (dword@0x08 >> 0x15) & 1
     virtual void _vf55() = 0;                                        // [55]  0x1B8
     virtual void _vf56() = 0;                                        // [56]  0x1C0
@@ -84,8 +84,8 @@ struct IEntity {
     virtual void _vf60() = 0;                                        // [60]  0x1E0  1147 bytes
     virtual void _vf61() = 0;                                        // [61]  0x1E8
     virtual void _vf62() = 0;                                        // [62]  0x1F0  reads dword@0x0C (id) + arg (SetTimer/KillTimer?)
-    virtual void _vf63() = 0;                                        // [63]  0x1F8
-    virtual uint32_t _vf64() const = 0;                              // [64]  0x200  (dword@0x08 >> 4) & 1
+    virtual void Hide(bool hidden) = 0;                              // [63]  0x1F8 VERIFIED by engine call sites and offline VTable audit
+    virtual bool IsHidden() const = 0;                               // [64]  0x200 (dword@0x08 >> 4) & 1                      VERIFIED
     virtual void _vf65() = 0;                                        // [65]  0x208
     virtual uint32_t _vf66() const = 0;                              // [66]  0x210  (dword@0x08 >> 0x12) & 1
     virtual IEntityProxy* GetProxy(int proxyType) const = 0;         // [67]  0x218  60 bytes (KCD1 GetProxy slot)                tentative

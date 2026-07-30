@@ -1579,12 +1579,12 @@ template<class F1, class F2>
 ILINE Vec3_tpl<F1> operator*(const DualQuat_tpl<F1> &dq, const Vec3_tpl<F2> &v) 
 {
   F2 t;
-  register const F2 ax=dq.nq.v.y*v.z-dq.nq.v.z*v.y+dq.nq.w*v.x;
-  register const F2 ay=dq.nq.v.z*v.x-dq.nq.v.x*v.z+dq.nq.w*v.y;
-  register const F2 az=dq.nq.v.x*v.y-dq.nq.v.y*v.x+dq.nq.w*v.z;
-  register F2 x=dq.dq.v.x*dq.nq.w-dq.nq.v.x*dq.dq.w+dq.nq.v.y*dq.dq.v.z-dq.nq.v.z*dq.dq.v.y; x+=x; t=(az*dq.nq.v.y-ay*dq.nq.v.z); x+=t+t+v.x; 
-  register F2 y=dq.dq.v.y*dq.nq.w-dq.nq.v.y*dq.dq.w+dq.nq.v.z*dq.dq.v.x-dq.nq.v.x*dq.dq.v.z; y+=y; t=(ax*dq.nq.v.z-az*dq.nq.v.x); y+=t+t+v.y; 
-  register F2 z=dq.dq.v.z*dq.nq.w-dq.nq.v.z*dq.dq.w+dq.nq.v.x*dq.dq.v.y-dq.nq.v.y*dq.dq.v.x; z+=z; t=(ay*dq.nq.v.x-ax*dq.nq.v.y); z+=t+t+v.z; 
+  const F2 ax=dq.nq.v.y*v.z-dq.nq.v.z*v.y+dq.nq.w*v.x;
+  const F2 ay=dq.nq.v.z*v.x-dq.nq.v.x*v.z+dq.nq.w*v.y;
+  const F2 az=dq.nq.v.x*v.y-dq.nq.v.y*v.x+dq.nq.w*v.z;
+  F2 x=dq.dq.v.x*dq.nq.w-dq.nq.v.x*dq.dq.w+dq.nq.v.y*dq.dq.v.z-dq.nq.v.z*dq.dq.v.y; x+=x; t=(az*dq.nq.v.y-ay*dq.nq.v.z); x+=t+t+v.x; 
+  F2 y=dq.dq.v.y*dq.nq.w-dq.nq.v.y*dq.dq.w+dq.nq.v.z*dq.dq.v.x-dq.nq.v.x*dq.dq.v.z; y+=y; t=(ax*dq.nq.v.z-az*dq.nq.v.x); y+=t+t+v.y; 
+  F2 z=dq.dq.v.z*dq.nq.w-dq.nq.v.z*dq.dq.w+dq.nq.v.x*dq.dq.v.y-dq.nq.v.y*dq.dq.v.x; z+=z; t=(ay*dq.nq.v.x-ax*dq.nq.v.y); z+=t+t+v.z; 
   return Vec3_tpl<F2>(x,y,z);
 }
 

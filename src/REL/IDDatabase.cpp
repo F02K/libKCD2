@@ -7,7 +7,6 @@
 #include <algorithm>
 #include <cstdio>
 #include <cstring>
-#include <fstream>
 #include <string>
 
 namespace REL
@@ -16,6 +15,20 @@ namespace REL
 	{
 		std::wstring s_dbDir;
 		bool         s_dbDirSet = false;
+
+		bool read_exact(HANDLE a_file, void* a_buffer, DWORD a_size)
+		{
+			auto* cursor = static_cast<char*>(a_buffer);
+			while (a_size > 0) {
+				DWORD read = 0;
+				if (!::ReadFile(a_file, cursor, a_size, &read, nullptr) || read == 0) {
+					return false;
+				}
+				cursor += read;
+				a_size -= read;
+			}
+			return true;
+		}
 
 		[[noreturn]] void fail(const std::string& a_msg)
 		{
@@ -69,8 +82,10 @@ namespace REL
 		std::string  nameA = std::string("kcd_addresslib_") + dn + "_" + key + ".bin";
 		std::wstring full = dir + L"\\" + std::wstring(nameA.begin(), nameA.end());
 
-		std::ifstream f(full.c_str(), std::ios::binary);
-		if (!f) {
+		const auto file = ::CreateFileW(
+			full.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING,
+			FILE_ATTRIBUTE_NORMAL, nullptr);
+		if (file == INVALID_HANDLE_VALUE) {
 			std::string p(full.size(), '\0');
 			for (std::size_t i = 0; i < full.size(); ++i) {
 				p[i] = static_cast<char>(full[i]);  // ASCII path display in the error box
@@ -80,16 +95,15 @@ namespace REL
 		}
 
 		char magic[4]{};
-		f.read(magic, 4);
-		if (std::memcmp(magic, "KASL", 4) != 0) {
+		if (!read_exact(file, magic, sizeof(magic)) || std::memcmp(magic, "KASL", 4) != 0) {
 			fail("Address library has a bad magic header.");
 		}
 
 		std::uint32_t fmt = 0, fdist = 0, count = 0;
-		f.read(reinterpret_cast<char*>(&fmt), 4);
-		f.read(reinterpret_cast<char*>(&fdist), 4);
-		f.read(reinterpret_cast<char*>(&count), 4);
-		if (!f || count == 0) {
+		if (!read_exact(file, &fmt, sizeof(fmt)) ||
+			!read_exact(file, &fdist, sizeof(fdist)) ||
+			!read_exact(file, &count, sizeof(count)) ||
+			count == 0 || count > MAXDWORD / sizeof(mapping_t)) {
 			fail("Address library header is invalid.");
 		}
 		if (fdist != expectDist) {
@@ -97,11 +111,10 @@ namespace REL
 		}
 
 		_id2offset.resize(count);
-		f.read(reinterpret_cast<char*>(_id2offset.data()),
-			static_cast<std::streamsize>(count) * sizeof(mapping_t));
-		if (!f) {
+		if (!read_exact(file, _id2offset.data(), static_cast<DWORD>(count * sizeof(mapping_t)))) {
 			fail("Address library is truncated.");
 		}
+		::CloseHandle(file);
 
 		if (!std::is_sorted(_id2offset.begin(), _id2offset.end(),
 				[](const mapping_t& a, const mapping_t& b) { return a.id < b.id; })) {

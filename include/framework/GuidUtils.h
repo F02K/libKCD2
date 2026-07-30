@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 #include "../CryEngine/CryCommon/CryExtension/CryGUID.h"
 
 // -----------------------------------------------
@@ -17,5 +18,6 @@ namespace wh {
 
 // Parse "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" into the game's GUID byte layout.
 bool ParseGuid(const char* text, CryGUID& out);
+std::string FormatGuid(const CryGUID& guid);
 
 }  // namespace wh

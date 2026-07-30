@@ -44,6 +44,12 @@ static_assert(sizeof(S_TrackedFloat) == 0x8, "S_TrackedFloat must be 0x8");
 class C_Human : public C_Actor {
 public:
     inline static constexpr auto RTTI = Offsets::RTTI_C_Human;
+    // Native equivalents of C_ScriptBindHuman DrawWeapon/HolsterWeapon/
+    // IsWeaponDrawn. These dispatch through the Human's verified controller
+    // getter at actor vtable slot 191 and never enter the script system.
+    bool SetWeaponDrawn(bool drawn);
+    bool IsWeaponDrawn() const;
+
     wh::shared::C_Signal<> m_signal9C0;                // +0x9C0  VERIFIED C_Signal (shared default sentinel unk_185665430,
                                                        //         teardown sub_1808E19EC); args/purpose UNRESOLVED
     void*    m_pHandItemController;                    // +0x9D0  raw NON-owning; pointee back-refs C_Human @+56 and iterates

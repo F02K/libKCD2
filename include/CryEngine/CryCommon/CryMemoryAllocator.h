@@ -791,9 +791,9 @@ public:
 		size_t pSubBlock = (size_t)p;//& 0x1FFFF;
 
 		size_t pInBlock;
-		register size_t low = 0;
-		register size_t high = pBlock->_M_allocations_count;
-		register size_t mid=0;
+		size_t low = 0;
+		size_t high = pBlock->_M_allocations_count;
+		size_t mid=0;
 		while(low <= high) {
 			mid = (low + high) / 2;
 			pInBlock = pAddress[mid].GetNext(pBase);

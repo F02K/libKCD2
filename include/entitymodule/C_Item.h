@@ -66,6 +66,9 @@ public:
     // RAW amount write (m_amount only -- fires NO inventory listeners; the sanctioned in-inventory
     // change is C_InventoryBase::ChangeItemAmount).  0x180468B34
     void SetAmount(int32_t amount);
+    // Updates the global item-instance GUID registration as well as the field.
+    // 0x180467A6C
+    void SetInstanceGuid(const CryGUID& instanceGuid);
     // Gated item-changed broadcast (BT SetItemProperty prop 2 pokes mask 0x4000): if the global
     // gate 0x18046646C passes, runs 0x1804663DC -> listener notify + classData vf[15]
     // (classData, item, mask, (m_flags & mask)!=0).  NOT a flag mutator.  0x18046643C

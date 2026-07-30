@@ -110,7 +110,7 @@ struct IGameFramework {
     virtual void _vf49() = 0;                                      // [49]  0x188 160 bytes
     virtual void _vf50() = 0;                                      // [50]  0x190 179 bytes
     virtual void _vf51() = 0;                                      // [51]  0x198 uses game-context@+0x88
-    virtual void _vf52() = 0;                                      // [52]  0x1A0 324 bytes
+    virtual void EndGameContext() = 0;                            // [52]  0x1A0 0x180B6E3FC VERIFIED: retains context, IEntitySystem::Unload, clears smart pointer @+0x88, releases actor/network state
     virtual void _vf53() = 0;                                      // [53]  0x1A8 uses +0x88
     virtual void _vf54() = 0;                                      // [54]  0x1B0 uses +0x88
     virtual void SetGameSessionHandler(void* pHandler) = 0;        // [55]  0x1B8 *(this+0x610)=arg (returns old)              VERIFIED
