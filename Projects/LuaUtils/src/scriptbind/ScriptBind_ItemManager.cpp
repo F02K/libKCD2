@@ -13,7 +13,10 @@
 #include "entitymodule/C_InventoryManager.h"
 #include "entitymodule/C_Item.h"
 #include "entitymodule/E_ItemType.h"
+#include "entitymodule/S_EquippableItemClass.h"
+#include "entitymodule/S_ItemClass.h"
 #include "framework/WUID.h"
+#include "rpgmodule/C_RPGItemHealth.h"
 
 using namespace wh::entitymodule;
 using wh::framework::WUID;
@@ -149,13 +152,17 @@ int CScriptBind_ItemManagerExt::SetItemCondition(Offsets::IFunctionHandler* pH)
         return pH->EndFunction();
     condition = std::clamp(condition, 0.0f, 1.0f);
     if (item->IsOfType(E_ItemType::Equippable)) {
-        auto* rt = static_cast<C_EquippableItemRuntimeData*>(item->GetOrCreateRuntimeData());
-        if (!rt)
+        S_ItemClass* classData = item->GetClassData();
+        S_EquippableItemClass* equippableClass =
+            classData ? classData->GetAsEquippableItemClass() : nullptr;
+        auto* itemHealth = wh::rpgmodule::C_RPGItemHealth::GetInstance();
+        if (!equippableClass || !itemHealth)
             return pH->EndFunction();
-        rt->m_condition = condition;
-        item->NotifyChanged(0);
+
+        float health = itemHealth->ConditionToHealth(
+            equippableClass, condition, static_cast<std::uint32_t>(item->GetQuality()));
+        item->SetHealth(health);
     } else {
-        // Non-equippables have no runtime-data condition; +0x54 IS the condition.
         item->SetHealth(condition);
     }
     return pH->EndFunctionAny(ScriptAnyValue(true));

@@ -21,6 +21,13 @@ I_ItemRuntimeData* C_Item::GetOrCreateRuntimeData()
     return fn(this);
 }
 
+S_ItemClass* C_Item::GetClassData() const
+{
+    using Fn = S_ItemClass* (__fastcall*)(const C_Item*);
+    static REL::Relocation<Fn> fn{ REL::ID(26788) };  // 0x1804695B4
+    return fn(this);
+}
+
 void C_Item::SetHealth(float health, void* outNotifyCtx)
 {
     using Fn = void (__fastcall*)(C_Item*, float, void*);

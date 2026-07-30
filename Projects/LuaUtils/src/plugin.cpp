@@ -16,6 +16,8 @@
 #include "crysystem/CScriptableBase.h"
 #include "crysystem/SSystemGlobalEnvironment.h"
 #include "entitymodule/C_ScriptBindItemManager.h"
+#include "audio/AudioManager.h"
+#include "scriptbind/ScriptBind_AudioManager.h"
 #include "scriptbind/ScriptBind_EquipmentManager.h"
 #include "scriptbind/ScriptBind_ItemManager.h"
 
@@ -43,6 +45,15 @@ namespace {
         static inline REL::Relocation<decltype(&RegisterFunctions)> orig;
     } hkItemManagerRegisterFunctions;
 
+    bool g_audioTickQueued = false;
+
+    void TickAudio()
+    {
+        luautils::audio::g_audioManager.Tick();
+        if (auto* tasks = KCSE::GetTaskInterface())
+            tasks->AddTask(&TickAudio);
+    }
+
 }  // namespace
 
 // -------------------------------------------------------------- KCSE glue ---
@@ -52,6 +63,8 @@ static void InitScriptBinds()
     if (auto* env = SSystemGlobalEnvironment::GetInstance(); env && env->pScriptSystem) {
         if (!luautils::g_equipmentManagerBind.IsInitialized())
             luautils::g_equipmentManagerBind.Init(env->pScriptSystem);
+        if (!luautils::g_audioManagerBind.IsInitialized())
+            luautils::g_audioManagerBind.Init(env->pScriptSystem);
     }
 }
 
@@ -65,8 +78,15 @@ KCSE_PLUGIN_LOAD(kcse)
         return false;
 
     kcse->GetMessagingInterface()->RegisterListener([](KCSE::Message* msg) {
-        if (msg->type == KCSE::IMessagingInterface::kMessage_PreDataLoaded)
-            InitScriptBinds();
+        if (msg->type != KCSE::IMessagingInterface::kMessage_PreDataLoaded)
+            return;
+        InitScriptBinds();
+        if (!g_audioTickQueued) {
+            if (auto* tasks = KCSE::GetTaskInterface()) {
+                g_audioTickQueued = true;
+                tasks->AddTask(&TickAudio);
+            }
+        }
     });
     return true;
 }

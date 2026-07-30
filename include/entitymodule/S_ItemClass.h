@@ -26,6 +26,7 @@
 // Base vtable 0x183A4EC78 (55 slots), ctor sub_180754CE4, copy sub_180D290F8, dtor sub_181AB90BC.
 namespace wh::entitymodule {
 
+class S_EquippableItemClass;
 class S_HerbItemClass;
 class S_PickableItemClass;
 class S_PlayerItemClass;
@@ -64,9 +65,10 @@ public:
     // static default instance (e.g. [24] -> 0x1855DD170, [25] -> 0x1855DD210).
     virtual S_PickableItemClass* GetAsPickableItemClass();   // [24] 0x182A44E98
     virtual S_PlayerItemClass* GetAsPlayerItemClass();       // [25] 0x182A44F08 -- the UI name/icon view
-    // [26]..[50]: the remaining GetAs<Subclass>ItemClass() downcasts, one per hierarchy class.
-    // Per-slot identity SAMPLED not certified (adjacent same-shape run) -- keep by index only.
-    virtual S_ItemClass* GetAsUnk26();  virtual S_ItemClass* GetAsUnk27();
+    // [26] is certified by S_ItemClassWrapper<S_EquippableItemClass, S_PlayerItemClass, 26>
+    // and C_RPGItemHealth callers. The remaining adjacent downcasts stay unresolved.
+    virtual S_EquippableItemClass* GetAsEquippableItemClass();
+    virtual S_ItemClass* GetAsUnk27();
     virtual S_ItemClass* GetAsUnk28();  virtual S_ItemClass* GetAsUnk29();
     virtual S_ItemClass* GetAsUnk30();  virtual S_ItemClass* GetAsUnk31();
     virtual S_ItemClass* GetAsUnk32();  virtual S_ItemClass* GetAsUnk33();

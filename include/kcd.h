@@ -139,6 +139,7 @@
 #include "entitymodule/S_ItemClass.h"
 #include "entitymodule/S_PickableItemClass.h"
 #include "entitymodule/S_PlayerItemClass.h"
+#include "entitymodule/S_EquippableItemClass.h"
 #include "entitymodule/S_DivisibleItemClass.h"
 #include "entitymodule/S_TypedItemClass.h"
 #include "entitymodule/S_CraftingMaterialItemClass.h"
@@ -284,6 +285,8 @@
 #include "entitymodule/C_WeaponRuntimeData.h"
 #include "entitymodule/C_MeleeWeaponRuntimeData.h"
 #include "entitymodule/C_MissileWeaponRuntimeData.h"
+#include "rpgmodule/I_RPGItemHealth.h"
+#include "rpgmodule/C_RPGItemHealth.h"
 
 // ---- Tranche 7: buff instance leaves + buff init-params + save-game stack ----
 // buff leaves (below the C_SoulBuffInstance / C_TimedSoulBuffInstance anchors)
@@ -972,6 +975,10 @@
 #include "playermodule/E_QAM_WeaponSlot.h"
 #include "playermodule/E_QAM_FoodSlot.h"
 #include "playermodule/C_QAMSlot.h"
+#include "playermodule/I_QAMManager.h"
+#include "playermodule/C_QAMManager.h"
+#include "playermodule/I_OutfitManager.h"
+#include "playermodule/C_OutfitManager.h"
 #include "rpgmodule/E_CompanionEvent.h"
 // interfaces
 #include "guimodule/I_Cutscene.h"
