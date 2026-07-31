@@ -16,10 +16,13 @@
 #include "crysystem/CScriptableBase.h"
 #include "crysystem/SSystemGlobalEnvironment.h"
 #include "entitymodule/C_ScriptBindItemManager.h"
+#include "playermodule/C_ScriptBindMinigame.h"
 #include "audio/AudioManager.h"
 #include "scriptbind/ScriptBind_AudioManager.h"
 #include "scriptbind/ScriptBind_EquipmentManager.h"
 #include "scriptbind/ScriptBind_ItemManager.h"
+#include "scriptbind/ScriptBind_Minigame.h"
+#include "scriptbind/ScriptBind_RTTR.h"
 
 // ------------------------------------------------------------------ hooks ---
 
@@ -45,6 +48,26 @@ namespace {
         static inline REL::Relocation<decltype(&RegisterFunctions)> orig;
     } hkItemManagerRegisterFunctions;
 
+    class {
+    public:
+        static bool Install() {
+            void* target = reinterpret_cast<void*>(REL::ID(136563).address());  // 0x181795808
+            if (MH_CreateHook(target, reinterpret_cast<void*>(&RegisterFunctions),
+                              reinterpret_cast<void**>(&orig)) != MH_OK)
+                return false;
+
+            return MH_EnableHook(target) == MH_OK;
+        }
+
+    protected:
+        static void RegisterFunctions(wh::playermodule::C_ScriptBindMinigame* self) {
+            orig(self);
+            luautils::g_minigameExt.Attach(self->m_pSS, self->m_pMethodsTable);
+        }
+
+        static inline REL::Relocation<decltype(&RegisterFunctions)> orig;
+    } hkMinigameRegisterFunctions;
+
     bool g_audioTickQueued = false;
 
     void TickAudio()
@@ -61,6 +84,8 @@ namespace {
 static void InitScriptBinds()
 {
     if (auto* env = SSystemGlobalEnvironment::GetInstance(); env && env->pScriptSystem) {
+        if (!luautils::g_rttrBind.IsInitialized())
+            luautils::g_rttrBind.Init(env->pScriptSystem);
         if (!luautils::g_equipmentManagerBind.IsInitialized())
             luautils::g_equipmentManagerBind.Init(env->pScriptSystem);
         if (!luautils::g_audioManagerBind.IsInitialized())
@@ -76,16 +101,26 @@ KCSE_PLUGIN_LOAD(kcse)
         return false;
     if (!hkItemManagerRegisterFunctions.Install())
         return false;
+    if (!hkMinigameRegisterFunctions.Install())
+        return false;
 
     kcse->GetMessagingInterface()->RegisterListener([](KCSE::Message* msg) {
-        if (msg->type != KCSE::IMessagingInterface::kMessage_PreDataLoaded)
-            return;
-        InitScriptBinds();
-        if (!g_audioTickQueued) {
-            if (auto* tasks = KCSE::GetTaskInterface()) {
-                g_audioTickQueued = true;
-                tasks->AddTask(&TickAudio);
+        switch (msg->type) {
+        case KCSE::IMessagingInterface::kMessage_PreDataLoaded:
+            InitScriptBinds();
+            if (!g_audioTickQueued) {
+                if (auto* tasks = KCSE::GetTaskInterface()) {
+                    g_audioTickQueued = true;
+                    tasks->AddTask(&TickAudio);
+                }
             }
+            break;
+        case KCSE::IMessagingInterface::kMessage_LoadGame:
+        case KCSE::IMessagingInterface::kMessage_NewGame:
+            luautils::g_rttrBind.ClearHandles();
+            break;
+        default:
+            break;
         }
     });
     return true;
