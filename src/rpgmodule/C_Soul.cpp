@@ -121,7 +121,7 @@ bool dispatch_xp(C_Soul* soul, bool skill, uint32_t id, uint32_t amount)
         void*, void*, uint64_t, uint32_t, const uint32_t*, bool, uint32_t);
     static REL::Relocation<ResolveEvent> resolve{ REL::ID(54065) };       // Steam RVA 0x9DC2EC
     static REL::Relocation<ConstructCause> stat_cause{ REL::ID(66740) }; // Steam RVA 0xC671B0
-    static REL::Relocation<ConstructCause> skill_cause{ REL::ID(66741) };// Steam RVA 0xC67268
+    static REL::Relocation<ConstructCause> skill_cause{ REL::ID(66710) };// Steam RVA 0xC65AD0
     static REL::Relocation<std::uintptr_t> rpg_module{ REL::ID(2349) };  // Steam RVA 0x53322A0
 
     auto* module = *reinterpret_cast<void**>(rpg_module.address());

@@ -51,7 +51,8 @@ public:
     C_Item* MoveItemIn(C_Item* item, uint32_t count, bool unkOwnerFlag);
     // Complete native creation path used by C_ScriptBindInventory::CreateItem,
     // without invoking the script binder: build parameters 0x1804533E4,
-    // inventory insert 0x180465FC0, destroy parameters 0x180453BEC.
+    // inventory insert 0x180465FC0, destroy parameters 0x180453BEC. The wrapper
+    // supplies the builder's stricter 16-byte GUID alignment internally.
     C_Item* CreateItem(
         const CryGUID& classId,
         float health,

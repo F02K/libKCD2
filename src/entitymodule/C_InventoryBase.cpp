@@ -44,9 +44,11 @@ C_Item* C_InventoryBase::CreateItem(
     // S_ItemInitParams is 0xF8 bytes (all observed inventory paths step the
     // records by 0xF8). Keep it opaque here because its internal fields are
     // owned by the engine builder/destructor pair.
-    struct alignas(16) S_ItemInitParamsOpaque {
+    struct S_ItemInitParamsOpaque {
         std::byte data[0xF8];
-    } params{};
+    };
+    static_assert(sizeof(S_ItemInitParamsOpaque) == 0xF8);
+    alignas(16) S_ItemInitParamsOpaque params{};
     using Build = void* (__fastcall*)(
         S_ItemInitParamsOpaque*,
         const CryGUID*,
@@ -61,7 +63,14 @@ C_Item* C_InventoryBase::CreateItem(
     static REL::Relocation<Build> build{ REL::ID(26335) };    // Steam RVA 0x4533E4
     static REL::Relocation<Insert> insert{ REL::ID(26689) };  // Steam RVA 0x465FC0
     static REL::Relocation<Destroy> destroy{ REL::ID(26348) };// Steam RVA 0x453BEC
-    build(&params, &classId, amount, health);
+
+    // BuildItemInitParams copies the GUID with `movaps xmm0, [rdx]`. CryGUID
+    // itself only has 8-byte alignment, so callers are not required to provide
+    // the 16-byte alignment expected by this native implementation. Mirror the
+    // script binder's aligned stack copy before crossing the engine ABI.
+    static_assert(sizeof(CryGUID) == 0x10);
+    alignas(16) const CryGUID alignedClassId = classId;
+    build(&params, &alignedClassId, amount, health);
     auto* result = insert(this, &params, 4, 0);
     destroy(&params);
     return result;
