@@ -25,7 +25,7 @@ namespace wh::entitymodule { class C_Actor; class C_Item; }
 // E_MinigameType::Alchemy (3); one per user, owned by the player action subsystem:
 //   S_GameContext (*0x18549D388, Instance sub_1809155C8) +0x128 -> C_PlayerModule +0x18 -> owner
 //   +0x20 hash(userId) -> session list.  FindOrCreateAction = sub_182024240(owner, userId, 3,
-//   create, 0).  Start = sub_180897E1C(this, tableEntityId); End = I_Minigame slot [5]
+//   create, 0).  Start = sub_180897E1C(this, tableEntityId); Teardown = I_Minigame slot [5]
 //   (sub_1809F1A8C).
 //
 // There is NO single C_Alchemy::Update -- the session is event/input-driven: per frame
@@ -39,7 +39,7 @@ namespace wh::entitymodule { class C_Actor; class C_Item; }
 // m_brewState.m_buckets to time boils (skill window = GetBrewTolerance()).
 //
 // INPUT BINDINGS (alchemy_action_bindings.md): the ctor registers the 6 "alchemy"-context input
-// delegates ONCE into I_ActionSets (*(C_PlayerModule+0x60), slot [9]); End (I_Minigame [5],
+// delegates ONCE into I_ActionSets (*(C_PlayerModule+0x60), slot [9]); Teardown (I_Minigame [5],
 // 0x1809F1A8C) unregisters them and pops the "Alchemy" control-reason token.  Context switching
 // (Start/book) only toggles IActionMapManager::EnableActionMap -- registration is NEVER per-frame.
 

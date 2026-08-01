@@ -38,6 +38,8 @@ public:
     bool IsOfType(E_ItemType::Type type) const;
     // Returns m_pRuntimeData, lazily constructing the class-appropriate subclass.  0x180469454
     I_ItemRuntimeData* GetOrCreateRuntimeData();
+    // Returns m_pClassData or the shared default S_ItemClass while that pointer is null.  0x1804695B4
+    S_ItemClass* GetClassData() const;
     // The health-write core: change-detect vs +0x54, pre-hooks 0x180469988/0x180470138, clamped
     // write, classData vf[15] gate or |h-1|<1e-5, post-update 0x1804694C0 + runtime-data refresh,
     // then broadcast 0x1804663DC (or *(outCtx+8)=1 when outCtx given).  0x180470078

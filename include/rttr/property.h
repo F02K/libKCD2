@@ -1,21 +1,36 @@
 #pragma once
 
-// -----------------------------------------------
-// rttr::property -- KCD2 WHGame.dll 1.5.6 (kd7u).  sizeof 8.
-// -----------------------------------------------
-// Single-pointer front-end handle over a property_wrapper_base (upstream shape; the
-// binary's class_data +0x50 vector holds these -- registration update_class_list
-// 0x1806A84E8 appends to it). Method surface pending agent dossiers.
+#include "rttr/instance.h"
+#include "rttr/string_view.h"
+#include "rttr/type.h"
+#include "rttr/variant.h"
 
 namespace rttr {
+
 namespace detail {
 class property_wrapper_base;
-}  // namespace detail
+}
 
-class property {
+class property
+{
 public:
-    const detail::property_wrapper_base* m_wrapper;   // +0x00
+    property() noexcept : m_wrapper(nullptr) {}
+    explicit property(const detail::property_wrapper_base* wrapper) noexcept : m_wrapper(wrapper) {}
+    property(const property& other) noexcept : m_wrapper(other.m_wrapper) {}
+    property& operator=(const property& other) noexcept
+    {
+        m_wrapper = other.m_wrapper;
+        return *this;
+    }
+
+    bool is_valid() const;
+    string_view get_name() const;
+    type get_type() const;
+    type get_declaring_type() const;
+    variant get_value(instance object) const;
+
+    const detail::property_wrapper_base* m_wrapper;  // +0x00
 };
-static_assert(sizeof(property) == 8, "property is one wrapper ptr");
+static_assert(sizeof(property) == 0x8, "rttr::property is one wrapper pointer");
 
 }  // namespace rttr

@@ -28,7 +28,7 @@ public:
 
     // Native C++ RTTI names this C_EquipmentManager::E_QuickSlotSpec::Type. Public RTTR flattens
     // the reflected names to wh::entitymodule::E_QuickSlotSpec and E_QuickSlotSpecWrapper.
-    // This is an EquipPlayersItem selection policy, not part of S_EquipmentSlotIdWrapper.
+    // This selects the equip-to-QAM destination; it is not stored QAM state or an EquipmentSlotId.
     struct E_QuickSlotSpec {
         enum Type : std::int32_t {
             QuickSlot1                 = 0,

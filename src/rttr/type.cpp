@@ -1,36 +1,77 @@
 #include "rttr/type.h"
-#include "Offsets/Offsets.h"
 
-// rttr::type binary forwarders -- KCD2 WHGame.dll 1.5.6 (kd7u), cross-version via
-// REL::ID (ids resolved through analysis/addresslib/address_library/kcd2_id_registry.csv;
-// steam RVAs
-// noted per function). ABI shapes are the agent_type_api PROVEN signatures.
+#include "REL.h"
+#include "rttr/argument.h"
+#include "rttr/enumeration.h"
+#include "rttr/method.h"
+#include "rttr/property.h"
+#include "rttr/variant.h"
 
 namespace rttr {
 
 bool type::is_derived_from(const type& other) const
 {
-    // 0x1804F6364 -- raw_type pointer compare, else linear scan of the SORTED
-    // class_data::m_base_types. THE kind-check idiom of the game (50+ call sites);
-    // the shipped rttr_cast pattern is `is_derived_from ? static_cast : nullptr`
-    // with no pointer adjustment.
+    if (!is_valid() || !other.is_valid())
+        return false;
     using Fn = bool(__fastcall*)(const type*, const type*);
-    static REL::Relocation<Fn> fn{ REL::ID(29665) };
+    static REL::Relocation<Fn> fn{ REL::ID(29665) };  // 0x1804F6364
     return fn(this, &other);
+}
+
+type type::get_pointer_type() const
+{
+    if (!is_valid())
+        return {};
+    using Fn = type(__fastcall*)(const type&);
+    static REL::Relocation<Fn> fn{ REL::ID(36954) };  // 0x1806A4F08
+    return fn(*this);
+}
+
+property type::get_property(string_view name) const
+{
+    if (!is_valid())
+        return {};
+    using Fn = property(__fastcall*)(const type&, string_view);
+    static REL::Relocation<Fn> fn{ REL::ID(36971) };  // 0x1806A55FC
+    return fn(*this, name);
+}
+
+method type::get_method(string_view name) const
+{
+    if (!is_valid())
+        return {};
+    // Member return is this-first then hidden result: RCX=this, RDX=out, R8=name.
+    using Fn = method*(__fastcall*)(const type*, method*, const string_view*);
+    static REL::Relocation<Fn> fn{ REL::ID(37024) };  // 0x1806A76A0
+    method result;
+    fn(this, &result, &name);
+    return result;
+}
+
+enumeration type::get_enumeration() const
+{
+    return enumeration(is_valid() ? m_type_data->enum_wrapper : nullptr);
+}
+
+variant type::create_variant(const argument& value) const
+{
+    return is_valid() && m_type_data->create_variant
+        ? m_type_data->create_variant(value)
+        : variant{};
 }
 
 type type::get_by_name(string_view name)
 {
-    // 0x1806A589C -- FNV-ish hash + binary search of the flat_map at
-    // type_register_private+0x10 under the +0x178 mutex; miss returns the invalid
-    // type (singleton 0x18549D860). Keyed on the SAME normalized name get_name()
-    // returns, so get_by_name(t.get_name()) == t round-trips (22 game call sites).
-    // ABI: static fn, hidden return slot in RCX, string_view by pointer in RDX.
-    using Fn = type*(__fastcall*)(type*, const string_view*);
-    static REL::Relocation<Fn> fn{ REL::ID(36975) };
-    type result{ nullptr };
-    fn(&result, &name);
-    return result;
+    using Fn = type(__fastcall*)(string_view);
+    static REL::Relocation<Fn> fn{ REL::ID(36975) };  // 0x1806A589C
+    return fn(name);
+}
+
+method type::get_global_method(string_view name)
+{
+    using Fn = method(__fastcall*)(string_view);
+    static REL::Relocation<Fn> fn{ REL::ID(37000) };  // 0x1806A6DF0
+    return fn(name);
 }
 
 }  // namespace rttr

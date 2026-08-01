@@ -10,6 +10,12 @@
 //   EquipmentManager.GetInventoryEx(entityId)         -> { itemTable, ... } | nil  (GetItemEx shape)
 //   EquipmentManager.GetInventoryId(entityId)         -> inventoryId | nil
 //   EquipmentManager.SetItemEquipped(entityId, itemId, equip) -> true | nil
+//   EquipmentManager.GetWeaponQuickSlots(entityId[, outfitId]) -> pair records | nil
+//   EquipmentManager.SetWeaponQuickSlot(entityId, quickSlot, itemId[, outfitId]) -> slotId | nil
+//   EquipmentManager.ClearWeaponQuickSlot(entityId, quickSlot, offHand[, outfitId]) -> true | nil
+//   EquipmentManager.GetConsumableQuickSlots(entityId[, outfitId]) -> slot records | nil
+//   EquipmentManager.SetConsumableQuickSlot(entityId, slotId, itemId[, outfitId]) -> true | nil
+//   EquipmentManager.ClearConsumableQuickSlot(entityId, slotId[, outfitId]) -> true | nil
 //
 // GetHandSlots maps Lua 1..8 to E_WeaponEquipSlot values 0..7:
 // primary main/off, secondary main/off, oversized/oversized-off, torch, dagger.
@@ -47,6 +53,12 @@ public:
     int GetInventoryEx(Offsets::IFunctionHandler* pH);
     int GetInventoryId(Offsets::IFunctionHandler* pH);
     int SetItemEquipped(Offsets::IFunctionHandler* pH);
+    int GetWeaponQuickSlots(Offsets::IFunctionHandler* pH);
+    int SetWeaponQuickSlot(Offsets::IFunctionHandler* pH);
+    int ClearWeaponQuickSlot(Offsets::IFunctionHandler* pH);
+    int GetConsumableQuickSlots(Offsets::IFunctionHandler* pH);
+    int SetConsumableQuickSlot(Offsets::IFunctionHandler* pH);
+    int ClearConsumableQuickSlot(Offsets::IFunctionHandler* pH);
 
 private:
     void RegisterFunction(const char* sName, const char* sParams, const FunctionFunctor& f);
