@@ -48,6 +48,14 @@ public:
     // for Equippable-type items additionally resets the runtime-data condition (+0xA4) when
     // raising above the base health, then runs SetHealth.  0x1808D61B8
     void SetItemHealth(float health);
+    // Semantic normalized-condition setter. For equippable items this converts
+    // condition through C_RPGItemHealth before writing raw health; other items
+    // use condition as their raw health. Returns false when required runtime
+    // class/health data is unavailable.
+    bool SetCondition(float condition);
+    // Semantic quality setter for equippable items. Clamps to the class cap and
+    // preserves the item's normalized condition across the quality change.
+    bool SetQuality(int32_t quality);
     // RTTR "Condition": runtime-data condition (+0xA4) for Equippable-type items, else raw
     // m_health (+0x54).  0x18096F7D4
     float GetCondition() const;

@@ -3,11 +3,16 @@
 #include "REL/Module.h"
 
 #include <Windows.h>
+#include <bcrypt.h>
 
 #include <algorithm>
+#include <array>
 #include <cstdio>
 #include <cstring>
 #include <string>
+#include <vector>
+
+#pragma comment(lib, "bcrypt.lib")
 
 namespace REL
 {
@@ -34,6 +39,51 @@ namespace REL
 		{
 			::MessageBoxA(nullptr, a_msg.c_str(), "kcd_re REL::IDDatabase", MB_OK | MB_ICONERROR);
 			::TerminateProcess(::GetCurrentProcess(), 1);
+		}
+
+		std::string sha256(const std::vector<std::uint8_t>& a_data)
+		{
+			BCRYPT_ALG_HANDLE algorithm = nullptr;
+			if (BCryptOpenAlgorithmProvider(
+					&algorithm, BCRYPT_SHA256_ALGORITHM, nullptr, 0) < 0) {
+				fail("Could not initialize SHA-256 for the address library.");
+			}
+			DWORD objectSize = 0;
+			DWORD copied = 0;
+			if (BCryptGetProperty(
+					algorithm, BCRYPT_OBJECT_LENGTH,
+					reinterpret_cast<PUCHAR>(&objectSize), sizeof(objectSize),
+					&copied, 0) < 0) {
+				BCryptCloseAlgorithmProvider(algorithm, 0);
+				fail("Could not query SHA-256 state size.");
+			}
+			std::vector<std::uint8_t> object(objectSize);
+			BCRYPT_HASH_HANDLE hash = nullptr;
+			if (BCryptCreateHash(
+					algorithm, &hash, object.data(), objectSize,
+					nullptr, 0, 0) < 0
+				|| BCryptHashData(
+					hash, const_cast<PUCHAR>(a_data.data()),
+					static_cast<ULONG>(a_data.size()), 0) < 0) {
+				if (hash) BCryptDestroyHash(hash);
+				BCryptCloseAlgorithmProvider(algorithm, 0);
+				fail("Could not hash the loaded address library.");
+			}
+			std::array<std::uint8_t, 32> digest{};
+			const auto status = BCryptFinishHash(
+				hash, digest.data(), static_cast<ULONG>(digest.size()), 0);
+			BCryptDestroyHash(hash);
+			BCryptCloseAlgorithmProvider(algorithm, 0);
+			if (status < 0) {
+				fail("Could not hash the loaded address library.");
+			}
+			constexpr char hex[] = "0123456789abcdef";
+			std::string result(digest.size() * 2, '0');
+			for (std::size_t index = 0; index < digest.size(); ++index) {
+				result[index * 2] = hex[digest[index] >> 4];
+				result[index * 2 + 1] = hex[digest[index] & 0x0F];
+			}
+			return result;
 		}
 	}
 
@@ -94,16 +144,33 @@ namespace REL
 				 "\n\nThis KCSE build has no address mapping for this game version/distribution.");
 		}
 
+		LARGE_INTEGER fileSize{};
+		if (!::GetFileSizeEx(file, &fileSize) || fileSize.QuadPart < 16
+			|| fileSize.QuadPart > MAXDWORD) {
+			::CloseHandle(file);
+			fail("Address library file size is invalid.");
+		}
+		std::vector<std::uint8_t> bytes(static_cast<std::size_t>(fileSize.QuadPart));
+		if (!read_exact(file, bytes.data(), static_cast<DWORD>(bytes.size()))) {
+			::CloseHandle(file);
+			fail("Address library is truncated.");
+		}
+		::CloseHandle(file);
+
+		const auto* cursor = bytes.data();
 		char magic[4]{};
-		if (!read_exact(file, magic, sizeof(magic)) || std::memcmp(magic, "KASL", 4) != 0) {
+		std::memcpy(magic, cursor, sizeof(magic));
+		cursor += sizeof(magic);
+		if (std::memcmp(magic, "KASL", 4) != 0) {
 			fail("Address library has a bad magic header.");
 		}
 
 		std::uint32_t fmt = 0, fdist = 0, count = 0;
-		if (!read_exact(file, &fmt, sizeof(fmt)) ||
-			!read_exact(file, &fdist, sizeof(fdist)) ||
-			!read_exact(file, &count, sizeof(count)) ||
-			count == 0 || count > MAXDWORD / sizeof(mapping_t)) {
+		std::memcpy(&fmt, cursor, sizeof(fmt)); cursor += sizeof(fmt);
+		std::memcpy(&fdist, cursor, sizeof(fdist)); cursor += sizeof(fdist);
+		std::memcpy(&count, cursor, sizeof(count)); cursor += sizeof(count);
+		if (count == 0 || count > MAXDWORD / sizeof(mapping_t)
+			|| bytes.size() != 16 + static_cast<std::size_t>(count) * sizeof(mapping_t)) {
 			fail("Address library header is invalid.");
 		}
 		if (fdist != expectDist) {
@@ -111,10 +178,12 @@ namespace REL
 		}
 
 		_id2offset.resize(count);
-		if (!read_exact(file, _id2offset.data(), static_cast<DWORD>(count * sizeof(mapping_t)))) {
-			fail("Address library is truncated.");
-		}
-		::CloseHandle(file);
+		std::memcpy(_id2offset.data(), cursor, count * sizeof(mapping_t));
+		_metadata.distribution = dist;
+		_metadata.format_version = fmt;
+		_metadata.entry_count = count;
+		_metadata.build_key = key;
+		_metadata.sha256 = sha256(bytes);
 
 		if (!std::is_sorted(_id2offset.begin(), _id2offset.end(),
 				[](const mapping_t& a, const mapping_t& b) { return a.id < b.id; })) {

@@ -89,6 +89,10 @@ public:
     // CMovementRequest prefix internally and dispatches
     // IMovementController::RequestMovement [1].
     bool RequestLocomotion(const Vec3* moveTarget, float desiredSpeed);
+    // Cross-module MSVC RTTI checks against the verified C_Human and C_Animal
+    // type descriptors. Subclasses (C_NPCActor, C_Horse, ...) match their base.
+    [[nodiscard]] bool IsHumanActor() const;
+    [[nodiscard]] bool IsAnimalActor() const;
 
     ::CStateMachine<C_Actor> m_stateMachine;           // +0x58   (0x48) transition signal + state ptr + event ring FIFO
 

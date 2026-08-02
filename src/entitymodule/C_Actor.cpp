@@ -1,5 +1,6 @@
 #include "entitymodule/C_Actor.h"
 #include "Offsets/Offsets.h"
+#include "Offsets/RTTI.h"
 #include "rpgmodule/C_Soul.h"
 
 #include <array>
@@ -7,6 +8,26 @@
 // C_Actor engine-function forwarders (KCD2 WHGame.dll 1.5.6 RVAs, verified in kd7u).
 
 namespace wh::entitymodule {
+
+namespace {
+
+bool has_actor_runtime_type(const C_Actor* actor, const REL::ID& target)
+{
+    if (!actor)
+        return false;
+    // C_Actor / C_Animal / C_Human TypeDescriptors. Using explicit address
+    // IDs here keeps every runtime dependency covered by KCD2MP's vendored
+    // Address Library audit on Steam, GOG, and Epic.
+    const auto source = REL::ID(1519);  // RTTI_C_Actor
+    return __RTDynamicCast(
+        const_cast<C_Actor*>(actor),
+        0,
+        reinterpret_cast<void*>(source.address()),
+        reinterpret_cast<void*>(target.address()),
+        0) != nullptr;
+}
+
+}  // namespace
 
 wh::combatmodule::C_CombatActor* C_Actor::GetOrCreateCombatActor()
 {
@@ -49,6 +70,16 @@ bool C_Actor::RequestLocomotion(const Vec3* moveTarget, float desiredSpeed)
     auto** vtable = *reinterpret_cast<void***>(m_pMovementController);
     using Fn = bool (__fastcall*)(IMovementController*, movement_request*);
     return reinterpret_cast<Fn>(vtable[1])(m_pMovementController, &request);
+}
+
+bool C_Actor::IsHumanActor() const
+{
+    return has_actor_runtime_type(this, REL::ID(1533));  // RTTI_C_Human
+}
+
+bool C_Actor::IsAnimalActor() const
+{
+    return has_actor_runtime_type(this, REL::ID(1526));  // RTTI_C_Animal
 }
 
 }  // namespace wh::entitymodule

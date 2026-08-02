@@ -96,33 +96,38 @@ float C_Soul::GetSkillProgress(uint32_t skillId) const
 
 namespace {
 
-using XpThresholdFn = uint32_t* (__fastcall*)(
+using SkillXpTotalFn = uint32_t* (__fastcall*)(
+    const void*, uint32_t*, uint32_t);
+using StatXpTotalFn = uint32_t* (__fastcall*)(
     const void*, uint32_t*, uint32_t, uint32_t);
 
-uint32_t xp_threshold(bool skill, uint32_t level, uint32_t id)
+uint32_t xp_total(bool skill, uint32_t level, uint32_t id)
 {
     using ConstantsFn = const void* (__fastcall*)();
     static REL::Relocation<ConstantsFn> constants{ REL::ID(35176) };  // Steam RVA 0x649D30
-    static REL::Relocation<XpThresholdFn> stat{ REL::ID(26816) };     // Steam RVA 0x469C64
-    static REL::Relocation<XpThresholdFn> skill_fn{ REL::ID(85622) }; // Steam RVA 0xFA30DC
+    static REL::Relocation<SkillXpTotalFn> skill_fn{ REL::ID(66688) }; // Steam RVA 0xC64A4C
+    static REL::Relocation<StatXpTotalFn> stat_fn{ REL::ID(85622) };    // Steam RVA 0xFA30DC
     uint32_t result{};
     if (skill)
-        skill_fn(constants(), &result, level, id);
+        skill_fn(constants(), &result, level);
     else
-        stat(constants(), &result, level, id);
+        stat_fn(constants(), &result, level, id);
     return result;
 }
 
-bool dispatch_xp(C_Soul* soul, bool skill, uint32_t id, uint32_t amount)
+bool dispatch_stat_xp(C_Soul* soul, uint32_t id, uint32_t amount)
 {
     using ResolveEvent = void (__fastcall*)(
         void*, void**, const wh::framework::WUID*);
     using ConstructCause = void* (__fastcall*)(
-        void*, void*, uint64_t, uint32_t, const uint32_t*, bool, uint32_t);
-    static REL::Relocation<ResolveEvent> resolve{ REL::ID(54065) };       // Steam RVA 0x9DC2EC
-    static REL::Relocation<ConstructCause> stat_cause{ REL::ID(66740) }; // Steam RVA 0xC671B0
-    static REL::Relocation<ConstructCause> skill_cause{ REL::ID(66710) };// Steam RVA 0xC65AD0
-    static REL::Relocation<std::uintptr_t> rpg_module{ REL::ID(2349) };  // Steam RVA 0x53322A0
+        void*, void*, uint64_t, uint32_t, const uint32_t*);
+    using PrepareEvent = void (__fastcall*)(void*);
+    using DispatchEvent = void (__fastcall*)(void*, void*);
+    using ReleaseEvent = void (__fastcall*)(void**);
+    static REL::Relocation<ResolveEvent> resolve{ REL::ID(54065) };        // Steam RVA 0x9DC2EC
+    static REL::Relocation<ConstructCause> stat_cause{ REL::ID(85625) };   // Steam RVA 0xFA3218
+    static REL::Relocation<ReleaseEvent> release{ REL::ID(29767) };       // Steam RVA 0x4FB980
+    static REL::Relocation<std::uintptr_t> rpg_module{ REL::ID(2349) };   // Steam RVA 0x53322A0
 
     auto* module = *reinterpret_cast<void**>(rpg_module.address());
     if (!module)
@@ -132,24 +137,28 @@ bool dispatch_xp(C_Soul* soul, bool skill, uint32_t id, uint32_t amount)
     if (!manager)
         return false;
     auto** vtable = *reinterpret_cast<void***>(manager);
-    using Allocate = void* (__fastcall*)(void*);
-    using Dispatch = void (__fastcall*)(void*, void*);
-    auto allocate = reinterpret_cast<Allocate>(vtable[1]);
-    auto dispatch = reinterpret_cast<Dispatch>(vtable[0]);
+    auto prepare = reinterpret_cast<PrepareEvent>(vtable[1]);
+    auto dispatch = reinterpret_cast<DispatchEvent>(vtable[0]);
 
-    (void)allocate(manager);
+    // This mirrors the native AdvanceToStatLevel/AdvanceToSkillLevel path. Vtable slot 1
+    // prepares the event manager; it is not an allocator and its return value
+    // must never be used as effect storage. Both effect factories allocate and
+    // construct their own 0x40-byte cause object.
+    prepare(manager);
     void* event{};
     resolve(manager, &event, &soul->m_selfWuid);
-    auto* storage = allocate(manager);
-    if (!storage || !event)
+    prepare(manager);
+    if (!event)
         return false;
     const auto wuid = soul->m_selfWuid.m_value;
-    auto* cause = skill
-        ? skill_cause(storage, event, wuid, id, &amount, false, 0U)
-        : stat_cause(storage, event, wuid, id, &amount, false, 6U);
+    auto* cause = stat_cause(manager, event, wuid, id, &amount);
     if (!cause)
+    {
+        release(&event);
         return false;
+    }
     dispatch(manager, event);
+    release(&event);
     return true;
 }
 
@@ -164,12 +173,14 @@ bool set_absolute(
         || !std::isfinite(progress) || progress < 0.0f || progress > 1.0f)
         return false;
 
-    uint64_t total{};
-    for (uint32_t current = 0; current < level; ++current)
-        total += xp_threshold(skill, current, id);
-    total += static_cast<uint64_t>(std::llround(
-        static_cast<double>(xp_threshold(skill, level, id))
+    const auto level_start = xp_total(skill, level, id);
+    const auto next_level = xp_total(skill, level + 1U, id);
+    if (next_level < level_start)
+        return false;
+    const auto level_progress = static_cast<uint64_t>(std::llround(
+        static_cast<double>(next_level - level_start)
         * std::clamp(progress, 0.0f, 1.0f)));
+    const auto total = static_cast<uint64_t>(level_start) + level_progress;
     if (total > UINT32_MAX)
         return false;
 
@@ -179,9 +190,25 @@ bool set_absolute(
     auto& base = skill
         ? soul->m_rpgStats.m_baseBlock.m_skills[id]
         : soul->m_rpgStats.m_baseBlock.m_stats[id];
+
+    // Skill XP events are progression actions, not an authoritative snapshot
+    // setter. Some retained/native slots (for example fencing) reject that
+    // action altogether, while accepted actions can update linked RPG state.
+    // The live cell is what all skill getters consume and its second dword is
+    // the within-level XP used by GetSkillProgress. Mirror the exact snapshot
+    // into both native blocks so every one of the 35 stored slots, including
+    // special and obsolete ones, can be restored without progression effects.
+    if (skill)
+    {
+        const auto progress_xp = static_cast<uint32_t>(level_progress);
+        live = { level, progress_xp };
+        base = live;
+        return live.value == level && live.progressXp == progress_xp;
+    }
+
     live = {};
     base = {};
-    if (!dispatch_xp(soul, skill, id, static_cast<uint32_t>(total)))
+    if (!dispatch_stat_xp(soul, id, static_cast<uint32_t>(total)))
         return false;
     base = live;
     return live.value == level;

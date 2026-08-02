@@ -1,22 +1,15 @@
 #include "scriptbind/ScriptBind_ItemManager.h"
 
-#include <algorithm>
-
 #include "LuaHelpers.h"
 #include "ResolveHelpers.h"
 
 #include "Offsets/vtables/IFunctionHandler.h"
 #include "Offsets/vtables/IScriptSystem.h"
 #include "Offsets/vtables/IScriptTable.h"
-#include "entitymodule/C_EquippableItemRuntimeData.h"
 #include "entitymodule/C_Inventory.h"
 #include "entitymodule/C_InventoryManager.h"
 #include "entitymodule/C_Item.h"
-#include "entitymodule/E_ItemType.h"
-#include "entitymodule/S_EquippableItemClass.h"
-#include "entitymodule/S_ItemClass.h"
 #include "framework/WUID.h"
-#include "rpgmodule/C_RPGItemHealth.h"
 
 using namespace wh::entitymodule;
 using wh::framework::WUID;
@@ -150,22 +143,9 @@ int CScriptBind_ItemManagerExt::SetItemCondition(Offsets::IFunctionHandler* pH)
     float condition = 1.0f;
     if (!item || !pH->GetParam(2, condition))
         return pH->EndFunction();
-    condition = std::clamp(condition, 0.0f, 1.0f);
-    if (item->IsOfType(E_ItemType::Equippable)) {
-        S_ItemClass* classData = item->GetClassData();
-        S_EquippableItemClass* equippableClass =
-            classData ? classData->GetAsEquippableItemClass() : nullptr;
-        auto* itemHealth = wh::rpgmodule::C_RPGItemHealth::GetInstance();
-        if (!equippableClass || !itemHealth)
-            return pH->EndFunction();
-
-        float health = itemHealth->ConditionToHealth(
-            equippableClass, condition, static_cast<std::uint32_t>(item->GetQuality()));
-        item->SetHealth(health);
-    } else {
-        item->SetHealth(condition);
-    }
-    return pH->EndFunctionAny(ScriptAnyValue(true));
+    return item->SetCondition(condition)
+        ? pH->EndFunctionAny(ScriptAnyValue(true))
+        : pH->EndFunction();
 }
 
 int CScriptBind_ItemManagerExt::SetItemQuality(Offsets::IFunctionHandler* pH)
@@ -174,14 +154,9 @@ int CScriptBind_ItemManagerExt::SetItemQuality(Offsets::IFunctionHandler* pH)
     int quality = 0;
     if (!item || !pH->GetParam(2, quality))
         return pH->EndFunction();
-    if (!item->IsOfType(E_ItemType::Equippable))
-        return pH->EndFunction();
-    auto* rt = static_cast<C_EquippableItemRuntimeData*>(item->GetOrCreateRuntimeData());
-    if (!rt)
-        return pH->EndFunction();
-    rt->m_quality = quality;
-    item->NotifyChanged(0);
-    return pH->EndFunctionAny(ScriptAnyValue(true));
+    return item->SetQuality(quality)
+        ? pH->EndFunctionAny(ScriptAnyValue(true))
+        : pH->EndFunction();
 }
 
 int CScriptBind_ItemManagerExt::SetItemAmount(Offsets::IFunctionHandler* pH)

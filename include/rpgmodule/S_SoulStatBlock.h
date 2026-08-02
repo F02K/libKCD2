@@ -26,11 +26,12 @@ namespace wh::rpgmodule {
 
 class C_Soul;
 
-// One stat/skill cell (8B). dword0 = base VALUE (all readers use only this); dword1 zeroed by the
-// element ctor, never observed being read -- possibly XP / cached-modified / reserved (UNVERIFIED).
+// One stat/skill cell (8B). dword0 is the current level; dword1 is the XP earned
+// inside that level. GetStatProgress/GetSkillProgress divide progressXp by the
+// XP span between the current and next level.
 struct S_StatCell {
-    uint32_t value;   // +0x00  base value (the number gameplay reads)
-    uint32_t _unk04;  // +0x04  reserved/unused: element ctor sub_180C23340 zeroes the whole 8B cell; every located reader (sub_180469D7C stats, sub_18046F854 skills) and writer (sub_180670788 addss/movss) touches only +0x00 (value); never observed non-zero
+    uint32_t value;       // +0x00  current base level
+    uint32_t progressXp;  // +0x04  XP accumulated inside the current level
 };
 static_assert(sizeof(S_StatCell) == 0x8, "S_StatCell must be 0x8");
 

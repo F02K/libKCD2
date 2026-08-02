@@ -11,11 +11,21 @@ namespace REL
 	class IDDatabase
 	{
 	public:
+		struct metadata_t
+		{
+			Distribution distribution{ Distribution::Unknown };
+			std::uint32_t format_version{};
+			std::uint32_t entry_count{};
+			std::string build_key;
+			std::string sha256;
+		};
+
 		[[nodiscard]] static IDDatabase& get();
 
 		// abstract id -> this binary's offset. Fatal if the id is absent (the plugin
 		// references an address the current build's table doesn't cover).
 		[[nodiscard]] std::size_t id2offset(std::uint64_t a_id) const;
+		[[nodiscard]] const metadata_t& metadata() const noexcept { return _metadata; }
 
 		// Must be called before the first get() to override the default
 		// (<game_root>/KCSE/addresslib/). No-op afterwards.
@@ -38,6 +48,7 @@ namespace REL
 		void load();
 
 		std::vector<mapping_t> _id2offset;  // sorted by id
+		metadata_t _metadata;
 	};
 
 	class ID

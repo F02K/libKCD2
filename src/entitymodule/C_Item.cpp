@@ -1,5 +1,10 @@
 #include "entitymodule/C_Item.h"
+#include "entitymodule/C_EquippableItemRuntimeData.h"
+#include "entitymodule/S_ItemClass.h"
 #include "Offsets/Offsets.h"
+#include "rpgmodule/C_RPGItemHealth.h"
+
+#include <algorithm>
 
 // C_Item engine-function forwarders (KCD2 WHGame.dll 1.5.6 RVAs; ids = kcd2 address library).
 // Discovery context: RTTR type "wh::entitymodule::Item" registrar sub_180CE0CD8, the BT
@@ -40,6 +45,46 @@ void C_Item::SetItemHealth(float health)
     using Fn = void (__fastcall*)(C_Item*, float);
     static REL::Relocation<Fn> fn{ REL::ID(48260) };  // 0x1808D61B8
     fn(this, health);
+}
+
+bool C_Item::SetCondition(float condition)
+{
+    condition = std::clamp(condition, 0.0F, 1.0F);
+    if (!IsOfType(E_ItemType::Equippable)) {
+        SetHealth(condition);
+        return true;
+    }
+
+    auto* classData = GetClassData();
+    auto* equippableClass = classData ? classData->GetAsEquippableItemClass() : nullptr;
+    auto* itemHealth = wh::rpgmodule::C_RPGItemHealth::GetInstance();
+    if (!equippableClass || !itemHealth) {
+        return false;
+    }
+    const auto health = itemHealth->ConditionToHealth(
+        equippableClass, condition, static_cast<std::uint32_t>(GetQuality()));
+    SetHealth(health);
+    return true;
+}
+
+bool C_Item::SetQuality(int32_t quality)
+{
+    if (!IsOfType(E_ItemType::Equippable)) {
+        return false;
+    }
+    auto* runtime = static_cast<C_EquippableItemRuntimeData*>(GetOrCreateRuntimeData());
+    if (!runtime) {
+        return false;
+    }
+    const auto condition = GetCondition();
+    const auto previousQuality = runtime->m_quality;
+    runtime->m_quality = std::clamp(quality, 0, GetMaxQuality());
+    if (!SetCondition(condition)) {
+        runtime->m_quality = previousQuality;
+        return false;
+    }
+    NotifyChanged(0x4000U);
+    return true;
 }
 
 float C_Item::GetCondition() const
