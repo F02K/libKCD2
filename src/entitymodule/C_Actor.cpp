@@ -47,6 +47,12 @@ C_Inventory* C_Actor::GetInventory()
 
 bool C_Actor::RequestLocomotion(const Vec3* moveTarget, float desiredSpeed)
 {
+    return RequestLocomotion({moveTarget, nullptr, desiredSpeed, false});
+}
+
+bool C_Actor::RequestLocomotion(
+    const SMultiplayerLocomotionRequest& input)
+{
     if (!m_pMovementController)
         return false;
 
@@ -59,13 +65,22 @@ bool C_Actor::RequestLocomotion(const Vec3* moveTarget, float desiredSpeed)
     } request;
     auto* flags = reinterpret_cast<std::uint64_t*>(request.storage.data());
     *flags |= 1ULL << 2;  // eMRF_DesiredSpeed
-    *reinterpret_cast<float*>(request.storage.data() + 56) = desiredSpeed;
-    *reinterpret_cast<float*>(request.storage.data() + 60) = desiredSpeed;
-    if (moveTarget)
+    *reinterpret_cast<float*>(request.storage.data() + 56) = input.desiredSpeed;
+    *reinterpret_cast<float*>(request.storage.data() + 60) = input.desiredSpeed;
+    if (input.moveTarget)
     {
         *flags |= 1ULL << 4;  // eMRF_MoveTarget
-        *reinterpret_cast<Vec3*>(request.storage.data() + 88) = *moveTarget;
+        *reinterpret_cast<Vec3*>(request.storage.data() + 88) = *input.moveTarget;
     }
+    if (input.facingDirection)
+    {
+        *flags |= 1ULL << 18;  // eMRF_DesiredBodyDirectionAtTarget
+        *reinterpret_cast<Vec3*>(request.storage.data() + 112) =
+            *input.facingDirection;
+        *flags |= 1ULL << 23;  // eMRF_AllowLowerBodyToTurn
+    }
+    if (input.allowStrafing)
+        *flags |= 1ULL << 21;  // eMRF_AllowStrafing
 
     auto** vtable = *reinterpret_cast<void***>(m_pMovementController);
     using Fn = bool (__fastcall*)(IMovementController*, movement_request*);

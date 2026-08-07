@@ -49,6 +49,14 @@
 struct IMovementController;   // CryEngine
 struct IAnimatedCharacter;    // CryAction (behavioral identification)
 
+struct SMultiplayerLocomotionRequest
+{
+    const Vec3* moveTarget{};
+    const Vec3* facingDirection{};
+    float desiredSpeed{};
+    bool allowStrafing{};
+};
+
 namespace wh::combatmodule { class I_CombatActor; class C_CombatActor; }
 namespace wh::rpgmodule    { class C_Soul; }
 
@@ -89,6 +97,7 @@ public:
     // CMovementRequest prefix internally and dispatches
     // IMovementController::RequestMovement [1].
     bool RequestLocomotion(const Vec3* moveTarget, float desiredSpeed);
+    bool RequestLocomotion(const SMultiplayerLocomotionRequest& request);
     // Cross-module MSVC RTTI checks against the verified C_Human and C_Animal
     // type descriptors. Subclasses (C_NPCActor, C_Horse, ...) match their base.
     [[nodiscard]] bool IsHumanActor() const;
